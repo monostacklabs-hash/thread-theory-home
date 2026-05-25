@@ -418,14 +418,38 @@ p {
 
 .gallery-head {
   display: grid;
-  gap: 0.35rem;
-  padding: 0.25rem 0.25rem 0;
+  gap: 0.5rem;
+  padding: 0.5rem 0.25rem 0.25rem;
 }
 
 .gallery-title {
-  font-size: clamp(1.6rem, 4.6vw, 2.2rem);
-  line-height: 1.05;
-  max-width: 24ch;
+  font-size: clamp(1.6rem, 4.4vw, 2.1rem);
+  line-height: 1.08;
+  max-width: 18ch;
+  text-wrap: balance;
+}
+
+.gallery-handle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--gold);
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
+  transition: color 160ms ease;
+}
+
+.gallery-handle::after {
+  content: "→";
+  transition: transform 180ms ease;
+}
+
+.gallery-handle:hover {
+  color: var(--ink);
+}
+
+.gallery-handle:hover::after {
+  transform: translateX(3px);
 }
 
 .gallery-grid {

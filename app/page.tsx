@@ -119,7 +119,15 @@ export default function HomePage() {
               >
                 <header className="gallery-head">
                   <p className="panel-label">From Instagram</p>
-                  <h2 className="gallery-title">Latest from @threadtheoryhome.in</h2>
+                  <h2 className="gallery-title">Latest from the feed.</h2>
+                  <a
+                    className="gallery-handle"
+                    href={instagramUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    @threadtheoryhome.in
+                  </a>
                 </header>
                 <div className="gallery-grid">
                   {instaPosts.slice(0, 9).map((post) => (
