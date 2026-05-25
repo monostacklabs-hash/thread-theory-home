@@ -117,52 +117,55 @@ export default function HomePage() {
                 id="collection"
                 aria-label="From our Instagram"
               >
-                {instaPosts.slice(0, 1).map((post) => (
-                  <a
-                    key={post.shortcode}
-                    className="tile tile-large insta-tile"
-                    href={post.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`Open Instagram post: ${firstSentence(post.caption, "view on Instagram")}`}
-                  >
-                    <div className="tile-image">
-                      <Image
-                        src={post.image}
-                        alt={firstSentence(post.caption, "Thread Theory Instagram post")}
-                        fill
-                        sizes="(max-width: 720px) 100vw, 55vw"
-                        className="tile-image-img"
-                      />
-                    </div>
-                    <div className="tile-copy">
-                      <p className="tile-label">From Instagram</p>
-                      <h2>{firstSentence(post.caption, "Latest from our feed.")}</h2>
-                      <span className="insta-link-hint">View post →</span>
-                    </div>
-                  </a>
-                ))}
-                {instaPosts.slice(1, 3).map((post) => (
-                  <a
-                    key={post.shortcode}
-                    className="tile insta-tile"
-                    href={post.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`Open Instagram post: ${firstSentence(post.caption, "view on Instagram")}`}
-                  >
-                    <div className="tile-image">
-                      <Image
-                        src={post.image}
-                        alt={firstSentence(post.caption, "Thread Theory Instagram post")}
-                        fill
-                        sizes="(max-width: 720px) 100vw, 28vw"
-                        className="tile-image-img"
-                      />
-                    </div>
-                    <div className="mini-caption">{firstSentence(post.caption, "View post")}</div>
-                  </a>
-                ))}
+                <header className="gallery-head">
+                  <p className="panel-label">From Instagram</p>
+                  <h2 className="gallery-title">Latest from @threadtheoryhome.in</h2>
+                </header>
+                <div className="gallery-grid">
+                  {instaPosts.slice(0, 9).map((post) => (
+                    <a
+                      key={post.shortcode}
+                      className="tile insta-tile"
+                      href={post.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`Open Instagram post: ${firstSentence(post.caption, "view on Instagram")}`}
+                    >
+                      <div className="tile-image">
+                        <Image
+                          src={post.image}
+                          alt={firstSentence(post.caption, "Thread Theory Instagram post")}
+                          fill
+                          sizes="(max-width: 720px) 100vw, 33vw"
+                          className="tile-image-img"
+                        />
+                        <span className="tile-ig-badge" aria-hidden="true">
+                          <svg
+                            viewBox="0 0 24 24"
+                            width="16"
+                            height="16"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <rect x="3" y="3" width="18" height="18" rx="5" />
+                            <circle cx="12" cy="12" r="4" />
+                            <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+                          </svg>
+                        </span>
+                      </div>
+                      <div className="tile-copy">
+                        <p className="tile-eyebrow">Instagram</p>
+                        <p className="tile-caption">
+                          {firstSentence(post.caption, "View post")}
+                        </p>
+                        <span className="insta-link-hint">View post →</span>
+                      </div>
+                    </a>
+                  ))}
+                </div>
               </section>
             )}
 
