@@ -2,6 +2,23 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
 import { PublicFooter } from "@/components/public-footer";
+import instaManifest from "@/data/insta-manifest.json";
+
+type InstaPost = {
+  shortcode: string;
+  url: string;
+  image: string;
+  caption: string;
+};
+
+const instaPosts: InstaPost[] = instaManifest as InstaPost[];
+
+function firstSentence(caption: string, fallback: string): string {
+  if (!caption) return fallback;
+  const cleaned = caption.replace(/\s+/g, " ").trim();
+  const m = cleaned.match(/^([^.•\n!?]+[.!?]?)/);
+  return (m ? m[1] : cleaned).trim() || fallback;
+}
 
 export const metadata: Metadata = {
   title: "Thread Theory Home | Premium Bedsheets via Instagram",
@@ -94,53 +111,60 @@ export default function HomePage() {
               </div>
             </section>
 
-            <section
-              className="gallery reveal reveal-delay-1"
-              id="collection"
-              aria-label="Collection preview"
-            >
-              <div className="tile tile-large">
-                <div className="tile-image">
-                  <Image
-                    src="/photos/bedroom-2.jpg"
-                    alt="Jaipur cotton bedding in soft daylight"
-                    fill
-                    sizes="(max-width: 720px) 100vw, 55vw"
-                    className="tile-image-img"
-                  />
-                </div>
-                <div className="tile-copy">
-                  <p className="tile-label">Collection</p>
-                  <h2>Soft bedding in calm colours and easy textures.</h2>
-                </div>
-              </div>
-
-              <div className="tile">
-                <div className="tile-image">
-                  <Image
-                    src="/photos/bedroom-3.jpg"
-                    alt="Layered cotton sheets on a styled bed"
-                    fill
-                    sizes="(max-width: 720px) 100vw, 28vw"
-                    className="tile-image-img"
-                  />
-                </div>
-                <div className="mini-caption">Jaipur cotton</div>
-              </div>
-
-              <div className="tile">
-                <div className="tile-image">
-                  <Image
-                    src="/photos/bedroom-1.jpg"
-                    alt="Bedroom with neatly made bed and warm light"
-                    fill
-                    sizes="(max-width: 720px) 100vw, 28vw"
-                    className="tile-image-img"
-                  />
-                </div>
-                <div className="mini-caption">Premium cotton</div>
-              </div>
-            </section>
+            {instaPosts.length > 0 && (
+              <section
+                className="gallery reveal reveal-delay-1"
+                id="collection"
+                aria-label="From our Instagram"
+              >
+                {instaPosts.slice(0, 1).map((post) => (
+                  <a
+                    key={post.shortcode}
+                    className="tile tile-large insta-tile"
+                    href={post.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`Open Instagram post: ${firstSentence(post.caption, "view on Instagram")}`}
+                  >
+                    <div className="tile-image">
+                      <Image
+                        src={post.image}
+                        alt={firstSentence(post.caption, "Thread Theory Instagram post")}
+                        fill
+                        sizes="(max-width: 720px) 100vw, 55vw"
+                        className="tile-image-img"
+                      />
+                    </div>
+                    <div className="tile-copy">
+                      <p className="tile-label">From Instagram</p>
+                      <h2>{firstSentence(post.caption, "Latest from our feed.")}</h2>
+                      <span className="insta-link-hint">View post →</span>
+                    </div>
+                  </a>
+                ))}
+                {instaPosts.slice(1, 3).map((post) => (
+                  <a
+                    key={post.shortcode}
+                    className="tile insta-tile"
+                    href={post.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`Open Instagram post: ${firstSentence(post.caption, "view on Instagram")}`}
+                  >
+                    <div className="tile-image">
+                      <Image
+                        src={post.image}
+                        alt={firstSentence(post.caption, "Thread Theory Instagram post")}
+                        fill
+                        sizes="(max-width: 720px) 100vw, 28vw"
+                        className="tile-image-img"
+                      />
+                    </div>
+                    <div className="mini-caption">{firstSentence(post.caption, "View post")}</div>
+                  </a>
+                ))}
+              </section>
+            )}
 
             <section
               className="info-grid reveal reveal-delay-2"

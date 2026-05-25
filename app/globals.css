@@ -459,7 +459,36 @@ p {
   padding: 0.9rem 1rem 1rem;
   color: var(--ink);
   font-size: 0.78rem;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.04em;
+  line-height: 1.45;
+}
+
+.tile.insta-tile {
+  display: flex;
+  flex-direction: column;
+  color: inherit;
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.tile.insta-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 30px 70px rgba(31, 26, 20, 0.12);
+}
+
+.tile.insta-tile.tile-large .tile-copy {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.insta-link-hint {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.6rem;
+  color: var(--gold);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 

@@ -53,19 +53,26 @@ describe("HomePage — hero", () => {
   });
 });
 
-describe("HomePage — gallery", () => {
+describe("HomePage — Instagram gallery", () => {
   it("renders the collection section anchor", () => {
     render(<HomePage />);
     expect(document.querySelector("#collection")).not.toBeNull();
   });
 
-  it("renders the gallery headline and mini captions", () => {
+  it("renders Instagram tiles as outbound links to instagram.com", () => {
     render(<HomePage />);
-    expect(
-      screen.getByRole("heading", { level: 2, name: /soft bedding in calm colours/i })
-    ).toBeInTheDocument();
-    expect(screen.getByText("Jaipur cotton")).toBeInTheDocument();
-    expect(screen.getByText("Premium cotton")).toBeInTheDocument();
+    const tiles = document.querySelectorAll<HTMLAnchorElement>("a.insta-tile");
+    expect(tiles.length).toBeGreaterThan(0);
+    tiles.forEach((tile) => {
+      expect(tile.getAttribute("href")).toMatch(/instagram\.com\/p\//);
+      expect(tile.getAttribute("target")).toBe("_blank");
+      expect(tile.getAttribute("rel")).toContain("noreferrer");
+    });
+  });
+
+  it("labels the large tile as coming from Instagram", () => {
+    render(<HomePage />);
+    expect(screen.getByText(/from instagram/i)).toBeInTheDocument();
   });
 });
 
@@ -114,5 +121,10 @@ describe("HomePage — guards", () => {
     expect(screen.queryByText("Dune Satin")).not.toBeInTheDocument();
     expect(screen.queryByText("Ivory Loom")).not.toBeInTheDocument();
     expect(screen.queryByText("Sage Thread")).not.toBeInTheDocument();
+  });
+
+  it("does NOT render the old static bedroom gallery copy", () => {
+    render(<HomePage />);
+    expect(screen.queryByText(/soft bedding in calm colours/i)).not.toBeInTheDocument();
   });
 });

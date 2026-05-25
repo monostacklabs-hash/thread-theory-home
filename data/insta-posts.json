@@ -1,0 +1,8 @@
+{
+  "comment": "Add Instagram post URLs here. The sync-insta script reads this list, downloads each post's og:image + caption, and writes the result to public/insta/. Order in this file = order on the landing page.",
+  "posts": [
+    "https://www.instagram.com/p/DYmkDW0yO-d/",
+    "https://www.instagram.com/p/DYmjw5uSSyZ/",
+    "https://www.instagram.com/p/DYj-1CNSZmJ/"
+  ]
+}
