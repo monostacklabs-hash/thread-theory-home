@@ -1,0 +1,58 @@
+import type { Metadata } from "next";
+import { AdminDashboard } from "@/components/admin/admin-dashboard";
+import { requireAdminSession } from "@/lib/auth";
+import { getAdminDb } from "@/lib/firebase/admin";
+import { BookingRecord } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Admin Dashboard",
+  robots: {
+    index: false,
+    follow: false
+  }
+};
+
+async function getBookings(): Promise<BookingRecord[]> {
+  const snapshot = await getAdminDb().collection("bookings").orderBy("createdAt", "desc").get();
+
+  return snapshot.docs.map((doc) => {
+    const data = doc.data();
+
+    return {
+      bookingId: data.bookingId,
+      name: data.name,
+      phone: data.phone,
+      email: data.email || null,
+      address: data.address,
+      product: data.product,
+      notes: data.notes || "",
+      status: data.status,
+      token: data.token,
+      createdAt: data.createdAt?.toDate?.()?.toISOString?.() || undefined,
+      updatedAt: data.updatedAt?.toDate?.()?.toISOString?.() || undefined
+    } satisfies BookingRecord;
+  });
+}
+
+export default async function AdminPage() {
+  const session = await requireAdminSession();
+  const bookings = await getBookings();
+
+  return (
+    <main className="admin-shell">
+      <div className="container">
+        <section className="admin-header reveal">
+          <span className="eyebrow">Admin · {session.email}</span>
+          <h1>Order dashboard.</h1>
+          <p>
+            Create a booking after DM confirmation is complete. Copy the tracking link and
+            share it directly with the customer on Instagram.
+          </p>
+        </section>
+
+        <AdminDashboard initialBookings={bookings} />
+      </div>
+    </main>
+  );
+}

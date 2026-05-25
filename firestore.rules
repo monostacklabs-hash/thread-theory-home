@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // All booking access is handled through the Next.js server using
+    // the Firebase Admin SDK. Client-side Firestore access is not needed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
