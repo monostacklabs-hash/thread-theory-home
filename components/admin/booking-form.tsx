@@ -4,10 +4,12 @@ import { FormEvent, useState } from "react";
 import { BookingRecord } from "@/lib/types";
 
 type BookingFormProps = {
-  onCreated: (booking: BookingRecord, trackingUrl: string) => void;
+  onCreated?: (booking: BookingRecord, trackingUrl: string) => void;
+  onUpdated?: (booking: BookingRecord) => void;
+  booking?: BookingRecord;
 };
 
-const initialForm = {
+const emptyForm = {
   instagramHandle: "",
   name: "",
   phone: "",
@@ -19,24 +21,58 @@ const initialForm = {
   notes: ""
 };
 
-export function BookingForm({ onCreated }: BookingFormProps) {
-  const [form, setForm] = useState(initialForm);
+function toFormState(booking?: BookingRecord) {
+  if (!booking) return emptyForm;
+  return {
+    instagramHandle: booking.instagramHandle || "",
+    name: booking.name,
+    phone: booking.phone,
+    email: booking.email || "",
+    address: booking.address,
+    product: booking.product,
+    instagramPostUrl: booking.instagramPostUrl || "",
+    indiaPostTrackingNumber: booking.indiaPostTrackingNumber || "",
+    notes: booking.notes || ""
+  };
+}
+
+export function BookingForm({ onCreated, onUpdated, booking }: BookingFormProps) {
+  const isEditMode = Boolean(booking);
+  const [form, setForm] = useState(() => toFormState(booking));
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    setSuccess(null);
     setIsSubmitting(true);
 
     try {
+      if (isEditMode && booking) {
+        const response = await fetch(`/api/bookings/${booking.bookingId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form)
+        });
+
+        const body = (await response.json()) as {
+          booking?: BookingRecord;
+          error?: string;
+        };
+
+        if (!response.ok || !body.booking) {
+          throw new Error(
+            body.error || "Couldn’t save changes. Check the fields and try again."
+          );
+        }
+
+        onUpdated?.(body.booking);
+        return;
+      }
+
       const response = await fetch("/api/bookings", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form)
       });
 
@@ -47,25 +83,38 @@ export function BookingForm({ onCreated }: BookingFormProps) {
       };
 
       if (!response.ok || !body.booking || !body.trackingUrl) {
-        throw new Error(body.error || "Unable to create booking");
+        throw new Error(
+          body.error || "Couldn’t create booking. Check the fields and try again."
+        );
       }
 
-      setForm(initialForm);
-      setSuccess(`Created ${body.booking.bookingId}`);
-      onCreated(body.booking, body.trackingUrl);
+      setForm(emptyForm);
+      onCreated?.(body.booking, body.trackingUrl);
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Unable to create booking");
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Something went wrong. Try again in a moment."
+      );
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  function updateField(field: keyof typeof initialForm, value: string) {
+  function updateField(field: keyof typeof emptyForm, value: string) {
     setForm((current) => ({
       ...current,
       [field]: value
     }));
   }
+
+  const submitLabel = isEditMode
+    ? isSubmitting
+      ? "Saving…"
+      : "Save changes"
+    : isSubmitting
+      ? "Creating…"
+      : "Create booking";
 
   return (
     <form className="form-grid" onSubmit={handleSubmit}>
@@ -75,7 +124,7 @@ export function BookingForm({ onCreated }: BookingFormProps) {
           id="instagramHandle"
           value={form.instagramHandle}
           onChange={(event) => updateField("instagramHandle", event.target.value)}
-          placeholder="@theircustomerhandle"
+          placeholder="@handle"
           autoCapitalize="off"
           autoCorrect="off"
           spellCheck={false}
@@ -133,7 +182,7 @@ export function BookingForm({ onCreated }: BookingFormProps) {
           type="url"
           value={form.instagramPostUrl}
           onChange={(event) => updateField("instagramPostUrl", event.target.value)}
-          placeholder="https://www.instagram.com/p/..."
+          placeholder="https://www.instagram.com/p/…"
           autoCapitalize="off"
           autoCorrect="off"
           spellCheck={false}
@@ -164,7 +213,7 @@ export function BookingForm({ onCreated }: BookingFormProps) {
       </div>
 
       <div className="field">
-        <label htmlFor="notes">Notes</label>
+        <label htmlFor="notes">Notes (optional)</label>
         <textarea
           id="notes"
           value={form.notes}
@@ -172,11 +221,14 @@ export function BookingForm({ onCreated }: BookingFormProps) {
         />
       </div>
 
-      {error ? <p className="field-help">{error}</p> : null}
-      {success ? <p className="field-help">{success}</p> : null}
+      {error ? (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      ) : null}
 
       <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Creating..." : "Create booking"}
+        {submitLabel}
       </button>
     </form>
   );
