@@ -2,6 +2,7 @@ export const BOOKING_TIMELINE = [
   "order_received",
   "confirmed",
   "preparing",
+  "shipped",
   "delivered"
 ] as const;
 

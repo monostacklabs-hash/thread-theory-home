@@ -66,7 +66,7 @@ Fields:
 - `address: string`
 - `product: string`
 - `notes: string`
-- `status: "order_received" | "confirmed" | "preparing" | "delivered"`
+- `status: "order_received" | "confirmed" | "preparing" | "shipped" | "delivered" | "cancelled"`
 - `token: string`
 - `createdAt: Timestamp`
 - `updatedAt: Timestamp`

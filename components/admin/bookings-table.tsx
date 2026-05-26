@@ -42,6 +42,7 @@ const STATUS_HELP: Record<BookingStatus, string> = {
   order_received: "Order captured and waiting for confirmation.",
   confirmed: "Confirmed with the customer and accepted.",
   preparing: "Being packed or prepared for dispatch.",
+  shipped: "Handed to the courier and in transit to the customer.",
   delivered: "Delivered or handed over successfully.",
   cancelled: "Closed and shown as cancelled to the customer."
 };

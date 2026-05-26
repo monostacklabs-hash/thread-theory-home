@@ -1317,6 +1317,15 @@ p {
   background: #b07a3b;
 }
 
+.status-chip[data-status="shipped"] {
+  background: rgba(61, 125, 138, 0.12);
+  border-color: rgba(61, 125, 138, 0.28);
+}
+
+.status-chip[data-status="shipped"]::before {
+  background: #3d7d8a;
+}
+
 .status-chip[data-status="delivered"] {
   background: rgba(72, 106, 74, 0.12);
   border-color: rgba(72, 106, 74, 0.28);

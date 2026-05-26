@@ -7,6 +7,7 @@ export const STATUS_LABELS: Record<BookingStatus, string> = {
   order_received: "Order received",
   confirmed: "Confirmed",
   preparing: "Preparing",
+  shipped: "Shipped",
   delivered: "Delivered",
   cancelled: "Cancelled"
 };

@@ -37,6 +37,10 @@ const HEADLINES: Record<BookingStatus, { h1: string; sub: string }> = {
     h1: "Your order is being prepared.",
     sub: "Folded, pressed, and getting ready to ship out to you."
   },
+  shipped: {
+    h1: "Your order is on the way.",
+    sub: "The parcel has been handed to the courier and is on its way to your address."
+  },
   delivered: {
     h1: "Your order has been delivered.",
     sub: "Thanks for choosing Thread Theory Home. We hope you love your bedsheets."
@@ -51,11 +55,11 @@ const STEP_COPY: Record<(typeof BOOKING_TIMELINE)[number], string> = {
   order_received: "Your order details were recorded after the Instagram conversation.",
   confirmed: "The order has been reviewed and confirmed by Thread Theory Home.",
   preparing: "The bedsheet set is being prepared for dispatch.",
+  shipped: "Your parcel is with the courier and on its way to you.",
   delivered: "The order has been delivered or successfully handed over."
 };
 
-const INDIA_POST_TRACK_URL =
-  "https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx";
+const INDIA_POST_TRACK_URL = "https://www.indiapost.gov.in/";
 
 async function getBooking(bookingId: string): Promise<BookingRecord | null> {
   const snapshot = await getAdminDb().collection("bookings").doc(bookingId).get();
@@ -159,8 +163,8 @@ export default async function OrderTrackingPage({
               <span className="panel-label">On record for</span>
               <h3>{maskName(booking.name)}</h3>
               <p>{maskPhone(booking.phone)}</p>
-              <p>{maskEmail(booking.email)}</p>
-              <p>{maskAddress(booking.address)}</p>
+              {booking.email ? <p>{maskEmail(booking.email)}</p> : null}
+              {booking.address.trim() ? <p>{maskAddress(booking.address)}</p> : null}
             </article>
           </section>
 
