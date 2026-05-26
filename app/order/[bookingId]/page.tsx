@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { maskAddress, maskEmail, maskName, maskPhone, STATUS_LABELS } from "@/lib/bookings";
 import { INSTAGRAM_URL } from "@/lib/constants";
 import { getAdminDb } from "@/lib/firebase/admin";
-import { BOOKING_STATUSES, BookingRecord } from "@/lib/types";
+import { BOOKING_TIMELINE, BookingRecord } from "@/lib/types";
 
 export const metadata: Metadata = {
   title: "Order Tracking",
@@ -36,6 +36,7 @@ async function getBooking(bookingId: string): Promise<BookingRecord | null> {
     address: data.address,
     product: data.product,
     instagramPostUrl: data.instagramPostUrl || null,
+    indiaPostTrackingNumber: data.indiaPostTrackingNumber || null,
     notes: data.notes || "",
     status: data.status,
     token: data.token,
@@ -59,7 +60,10 @@ export default async function OrderTrackingPage({
     notFound();
   }
 
-  const currentStatusIndex = BOOKING_STATUSES.indexOf(booking.status);
+  const isCancelled = booking.status === "cancelled";
+  const currentStatusIndex = isCancelled
+    ? -1
+    : (BOOKING_TIMELINE as readonly string[]).indexOf(booking.status);
 
   return (
     <main className="tracking-shell">
@@ -110,32 +114,36 @@ export default async function OrderTrackingPage({
 
         <section className="tracking-info reveal reveal-delay-3">
           <h2>{STATUS_LABELS[booking.status]}</h2>
-          <div className="status-timeline">
-            {BOOKING_STATUSES.map((status, index) => {
-              const isActive = index <= currentStatusIndex;
-              return (
-                <div
-                  className={`status-step ${isActive ? "active" : ""}`}
-                  key={status}
-                >
-                  <div className="status-dot" />
-                  <div className="status-copy">
-                    <strong>{STATUS_LABELS[status]}</strong>
-                    <p>
-                      {status === "order_received" &&
-                        "Your order details were recorded after the Instagram conversation."}
-                      {status === "confirmed" &&
-                        "The order has been reviewed and confirmed by Thread Theory Home."}
-                      {status === "preparing" &&
-                        "The bedsheet set is being prepared for dispatch or final handoff."}
-                      {status === "delivered" &&
-                        "The order has been marked as delivered or successfully handed over."}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          {isCancelled ? (
+            <p>This order has been cancelled. Reach out on Instagram if you have any questions.</p>
+          ) : (
+            <div className="status-timeline">
+              {BOOKING_TIMELINE.map((status, index) => {
+                const isActive = index <= currentStatusIndex;
+                return (
+                  <div
+                    className={`status-step ${isActive ? "active" : ""}`}
+                    key={status}
+                  >
+                      <div className="status-dot" />
+                      <div className="status-copy">
+                        <strong>{STATUS_LABELS[status]}</strong>
+                        <p>
+                          {status === "order_received" &&
+                            "Your order details were recorded after the Instagram conversation."}
+                          {status === "confirmed" &&
+                            "The order has been reviewed and confirmed by Thread Theory Home."}
+                          {status === "preparing" &&
+                            "The bedsheet set is being prepared for dispatch or final handoff."}
+                          {status === "delivered" &&
+                            "The order has been marked as delivered or successfully handed over."}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
         </section>
 
         <p className="field-help" style={{ marginTop: 20 }}>

@@ -1,9 +1,11 @@
-export const BOOKING_STATUSES = [
+export const BOOKING_TIMELINE = [
   "order_received",
   "confirmed",
   "preparing",
   "delivered"
 ] as const;
+
+export const BOOKING_STATUSES = [...BOOKING_TIMELINE, "cancelled"] as const;
 
 export type BookingStatus = (typeof BOOKING_STATUSES)[number];
 

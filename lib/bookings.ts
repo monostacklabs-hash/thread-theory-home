@@ -4,10 +4,11 @@ import { BOOKING_STATUSES, BookingStatus, CreateBookingInput } from "@/lib/types
 export const BOOKING_PREFIX = "TTH";
 
 export const STATUS_LABELS: Record<BookingStatus, string> = {
-  order_received: "Order Received",
+  order_received: "Order received",
   confirmed: "Confirmed",
   preparing: "Preparing",
-  delivered: "Delivered"
+  delivered: "Delivered",
+  cancelled: "Cancelled"
 };
 
 export function formatBookingId(sequence: number) {
@@ -77,6 +78,19 @@ export function validateCreateBookingInput(payload: Partial<CreateBookingInput>)
     indiaPostTrackingNumber: normalizeIndiaPostTrackingNumber(payload.indiaPostTrackingNumber),
     notes: payload.notes?.trim() || ""
   };
+}
+
+const bookingDateFormatter = new Intl.DateTimeFormat("en-IN", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric"
+});
+
+export function formatBookingDate(iso?: string | null) {
+  if (!iso) return "—";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
+  return bookingDateFormatter.format(date);
 }
 
 export function buildTrackingUrl({
