@@ -38,6 +38,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "/",
+    locale: "en_IN",
     title: "Thread Theory Home | Premium Bedsheets via Instagram",
     description:
       "Instagram-first premium bedding with direct order confirmation and private tracking.",
@@ -82,7 +83,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en-IN">
       <body className={`${displayFont.variable} ${bodyFont.variable}`}>
         <FirebaseAnalytics />
         {children}

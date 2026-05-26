@@ -31,21 +31,42 @@ export const metadata: Metadata = {
 export default function HomePage() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
-  const jsonLd = {
+  const organizationLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": `${siteUrl}/#organization`,
     name: "Thread Theory Home",
     url: siteUrl,
+    logo: `${siteUrl}/icon.svg`,
+    image: `${siteUrl}/photos/bedroom-1.jpg`,
     sameAs: [INSTAGRAM_URL],
+    address: {
+      "@type": "PostalAddress",
+      addressCountry: "IN"
+    },
     description:
       "Premium bedsheet brand selling through Instagram DMs with private order tracking."
+  };
+
+  const websiteLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${siteUrl}/#website`,
+    url: siteUrl,
+    name: "Thread Theory Home",
+    publisher: { "@id": `${siteUrl}/#organization` },
+    inLanguage: "en-IN"
   };
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }}
       />
 
       <div className="page-shell landing-shell">
@@ -93,14 +114,10 @@ export default function HomePage() {
                   <p className="panel-label">What matters here</p>
                   <p>Soft cotton. Clean colours. Everyday ease.</p>
                 </div>
-                <div
-                  className="hero-fabric"
-                  role="img"
-                  aria-label="Bedroom styled with Thread Theory bedding"
-                >
+                <div className="hero-fabric">
                   <Image
                     src="/photos/bedroom-1.jpg"
-                    alt=""
+                    alt="Bedroom styled with Thread Theory Home premium cotton bedsheets"
                     fill
                     sizes="(max-width: 960px) 100vw, 40vw"
                     className="hero-fabric-img"
