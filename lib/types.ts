@@ -12,8 +12,11 @@ export type BookingRecord = {
   name: string;
   phone: string;
   email: string | null;
+  instagramHandle: string | null;
   address: string;
   product: string;
+  instagramPostUrl: string | null;
+  indiaPostTrackingNumber: string | null;
   notes: string;
   status: BookingStatus;
   token: string;
@@ -25,7 +28,10 @@ export type CreateBookingInput = {
   name: string;
   phone: string;
   email?: string;
+  instagramHandle?: string;
   address: string;
   product: string;
+  instagramPostUrl?: string;
+  indiaPostTrackingNumber?: string;
   notes?: string;
 };

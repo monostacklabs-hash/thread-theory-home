@@ -8,11 +8,14 @@ type BookingFormProps = {
 };
 
 const initialForm = {
+  instagramHandle: "",
   name: "",
   phone: "",
   email: "",
   address: "",
   product: "",
+  instagramPostUrl: "",
+  indiaPostTrackingNumber: "",
   notes: ""
 };
 
@@ -66,6 +69,19 @@ export function BookingForm({ onCreated }: BookingFormProps) {
 
   return (
     <form className="form-grid" onSubmit={handleSubmit}>
+      <div className="field">
+        <label htmlFor="instagramHandle">Instagram handle (optional)</label>
+        <input
+          id="instagramHandle"
+          value={form.instagramHandle}
+          onChange={(event) => updateField("instagramHandle", event.target.value)}
+          placeholder="@theircustomerhandle"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+        />
+      </div>
+
       <div className="form-row">
         <div className="field">
           <label htmlFor="name">Name</label>
@@ -108,6 +124,33 @@ export function BookingForm({ onCreated }: BookingFormProps) {
             required
           />
         </div>
+      </div>
+
+      <div className="field">
+        <label htmlFor="instagramPostUrl">Instagram post link (optional)</label>
+        <input
+          id="instagramPostUrl"
+          type="url"
+          value={form.instagramPostUrl}
+          onChange={(event) => updateField("instagramPostUrl", event.target.value)}
+          placeholder="https://www.instagram.com/p/..."
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+        />
+      </div>
+
+      <div className="field">
+        <label htmlFor="indiaPostTrackingNumber">India Post tracking number (optional)</label>
+        <input
+          id="indiaPostTrackingNumber"
+          value={form.indiaPostTrackingNumber}
+          onChange={(event) => updateField("indiaPostTrackingNumber", event.target.value)}
+          placeholder="EE123456789IN"
+          autoCapitalize="characters"
+          autoCorrect="off"
+          spellCheck={false}
+        />
       </div>
 
       <div className="field">

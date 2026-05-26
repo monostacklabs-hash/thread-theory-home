@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
 import { PublicFooter } from "@/components/public-footer";
+import { INSTAGRAM_URL } from "@/lib/constants";
 import instaManifest from "@/data/insta-manifest.json";
 
 type InstaPost = {
@@ -28,8 +29,6 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  const instagramUrl =
-    process.env.NEXT_PUBLIC_INSTAGRAM_URL || "https://www.instagram.com/threadtheoryhome.in";
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
   const jsonLd = {
@@ -37,7 +36,7 @@ export default function HomePage() {
     "@type": "Organization",
     name: "Thread Theory Home",
     url: siteUrl,
-    sameAs: [instagramUrl],
+    sameAs: [INSTAGRAM_URL],
     description:
       "Premium bedsheet brand selling through Instagram DMs with private order tracking."
   };
@@ -77,7 +76,7 @@ export default function HomePage() {
                 <div className="actions">
                   <a
                     className="btn btn-primary"
-                    href={instagramUrl}
+                    href={INSTAGRAM_URL}
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -122,7 +121,7 @@ export default function HomePage() {
                   <h2 className="gallery-title">Latest from the feed.</h2>
                   <a
                     className="gallery-handle"
-                    href={instagramUrl}
+                    href={INSTAGRAM_URL}
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -215,7 +214,7 @@ export default function HomePage() {
                 </p>
                 <a
                   className="text-link"
-                  href={instagramUrl}
+                  href={INSTAGRAM_URL}
                   target="_blank"
                   rel="noreferrer"
                 >

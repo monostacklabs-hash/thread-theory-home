@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { INSTAGRAM_URL } from "@/lib/constants";
 
 const policyLinks = [
   { href: "/privacy", label: "Privacy Policy" },
@@ -9,9 +10,6 @@ const policyLinks = [
   { href: "/contact", label: "Contact" },
   { href: "/tracking-help", label: "Tracking Help" }
 ];
-
-const INSTAGRAM_URL =
-  process.env.NEXT_PUBLIC_INSTAGRAM_URL || "https://www.instagram.com/threadtheoryhome.in";
 
 export function PublicFooter() {
   const year = new Date().getFullYear();

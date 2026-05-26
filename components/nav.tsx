@@ -1,7 +1,5 @@
 import Link from "next/link";
-
-const INSTAGRAM_URL =
-  process.env.NEXT_PUBLIC_INSTAGRAM_URL || "https://www.instagram.com/threadtheoryhome.in";
+import { INSTAGRAM_URL } from "@/lib/constants";
 
 export function Nav() {
   return (

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { maskAddress, maskEmail, maskName, maskPhone, STATUS_LABELS } from "@/lib/bookings";
+import { INSTAGRAM_URL } from "@/lib/constants";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { BOOKING_STATUSES, BookingRecord } from "@/lib/types";
 
@@ -31,8 +32,10 @@ async function getBooking(bookingId: string): Promise<BookingRecord | null> {
     name: data.name,
     phone: data.phone,
     email: data.email || null,
+    instagramHandle: data.instagramHandle || null,
     address: data.address,
     product: data.product,
+    instagramPostUrl: data.instagramPostUrl || null,
     notes: data.notes || "",
     status: data.status,
     token: data.token,
@@ -75,6 +78,18 @@ export default async function OrderTrackingPage({
             <p>
               <strong>{booking.product}</strong>
             </p>
+            {booking.instagramPostUrl ? (
+              <p>
+                <a
+                  className="text-link"
+                  href={booking.instagramPostUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View on Instagram →
+                </a>
+              </p>
+            ) : null}
             <p>{booking.notes || "No extra notes recorded for this order."}</p>
             <p>
               Created{" "}
@@ -125,7 +140,7 @@ export default async function OrderTrackingPage({
 
         <p className="field-help" style={{ marginTop: 20 }}>
           Need help? Continue the conversation on{" "}
-          <Link className="text-link" href={process.env.NEXT_PUBLIC_INSTAGRAM_URL || "/"}>
+          <Link className="text-link" href={INSTAGRAM_URL}>
             Instagram
           </Link>
           .
