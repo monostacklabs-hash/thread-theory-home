@@ -6,6 +6,7 @@ import { BOOKING_STATUSES, BookingRecord, BookingStatus } from "@/lib/types";
 import { buildTrackingUrl, formatBookingDate, STATUS_LABELS } from "@/lib/bookings";
 import { Modal } from "@/components/admin/modal";
 import { BookingForm } from "@/components/admin/booking-form";
+import { BookingView } from "@/components/admin/booking-view";
 
 type FlashKind = "success" | "error";
 
@@ -205,6 +206,7 @@ export function BookingsTable({
   onFlash
 }: BookingsTableProps) {
   const [editing, setEditing] = useState<BookingRecord | null>(null);
+  const [viewing, setViewing] = useState<BookingRecord | null>(null);
   const [confirming, setConfirming] = useState<Confirming>(null);
   const [busyAction, setBusyAction] = useState(false);
 
@@ -262,6 +264,30 @@ export function BookingsTable({
         text: "Couldn’t copy to the clipboard. Try again from a secure tab."
       });
     }
+  }
+
+  async function copyTrackingNumber(booking: BookingRecord) {
+    if (!booking.indiaPostTrackingNumber) return;
+    try {
+      await navigator.clipboard.writeText(booking.indiaPostTrackingNumber);
+      onFlash({
+        kind: "success",
+        text: `Tracking number copied for ${booking.bookingId}.`
+      });
+    } catch {
+      onFlash({
+        kind: "error",
+        text: "Couldn’t copy the tracking number. Try again from a secure tab."
+      });
+    }
+  }
+
+  function openShippingLabel(booking: BookingRecord) {
+    window.open(
+      `/admin/shipping-label?bookingId=${booking.bookingId}`,
+      "_blank",
+      "noopener"
+    );
   }
 
   async function regenerateTrackingLink(booking: BookingRecord) {
@@ -359,6 +385,18 @@ export function BookingsTable({
               className="row-actions-item"
               onClick={() => {
                 close();
+                setViewing(booking);
+              }}
+            >
+              <span>View booking details</span>
+              <small>Open a read-only summary of this booking.</small>
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              className="row-actions-item"
+              onClick={() => {
+                close();
                 void copyTrackingLink(booking);
               }}
             >
@@ -376,6 +414,18 @@ export function BookingsTable({
             >
               <span>Edit booking details</span>
               <small>Update customer, product, or shipping info.</small>
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              className="row-actions-item"
+              onClick={() => {
+                close();
+                openShippingLabel(booking);
+              }}
+            >
+              <span>Generate shipping label</span>
+              <small>Opens a printable Speed Post label in a new tab.</small>
             </button>
             <button
               type="button"
@@ -433,7 +483,14 @@ export function BookingsTable({
             >
               <div className="booking-card-head">
                 <div>
-                  <div className="booking-id">{booking.bookingId}</div>
+                  <button
+                    type="button"
+                    className="booking-id booking-id-button"
+                    onClick={() => setViewing(booking)}
+                    aria-label={`View details for ${booking.bookingId}`}
+                  >
+                    {booking.bookingId}
+                  </button>
                   <p className="booking-card-when">{formatBookingDate(booking.createdAt)}</p>
                 </div>
                 <StatusChip
@@ -466,6 +523,24 @@ export function BookingsTable({
                   <span className="booking-card-label">Phone</span>
                   <a href={`tel:${booking.phone}`}>{booking.phone}</a>
                 </div>
+                {booking.indiaPostTrackingNumber ? (
+                  <div className="booking-card-row">
+                    <span className="booking-card-label">Tracking</span>
+                    <span className="tracking-value">
+                      <span className="tracking-number">
+                        {booking.indiaPostTrackingNumber}
+                      </span>
+                      <button
+                        type="button"
+                        className="copy-link"
+                        onClick={() => void copyTrackingNumber(booking)}
+                        aria-label={`Copy tracking number for ${booking.bookingId}`}
+                      >
+                        Copy
+                      </button>
+                    </span>
+                  </div>
+                ) : null}
                 <div className="booking-card-row">
                   <span className="booking-card-label">Product</span>
                   <span>
@@ -521,7 +596,14 @@ export function BookingsTable({
                   data-cancelled={isCancelled ? "true" : undefined}
                 >
                   <td>
-                    <div className="booking-id">{booking.bookingId}</div>
+                    <button
+                      type="button"
+                      className="booking-id booking-id-button"
+                      onClick={() => setViewing(booking)}
+                      aria-label={`View details for ${booking.bookingId}`}
+                    >
+                      {booking.bookingId}
+                    </button>
                     <div>
                       <a href={`tel:${booking.phone}`}>{booking.phone}</a>
                     </div>
@@ -555,6 +637,22 @@ export function BookingsTable({
                         </a>
                       </p>
                     ) : null}
+                    {booking.indiaPostTrackingNumber ? (
+                      <p className="tracking-line">
+                        <span className="tracking-eyebrow">Tracking</span>
+                        <span className="tracking-number">
+                          {booking.indiaPostTrackingNumber}
+                        </span>
+                        <button
+                          type="button"
+                          className="copy-link"
+                          onClick={() => void copyTrackingNumber(booking)}
+                          aria-label={`Copy tracking number for ${booking.bookingId}`}
+                        >
+                          Copy
+                        </button>
+                      </p>
+                    ) : null}
                     {booking.notes ? <p>{booking.notes}</p> : null}
                   </td>
                   <td>
@@ -575,6 +673,30 @@ export function BookingsTable({
           </tbody>
         </table>
       </div>
+
+      <Modal
+        open={viewing !== null}
+        onClose={() => setViewing(null)}
+        title={viewing ? `Booking ${viewing.bookingId}` : "Booking"}
+      >
+        {viewing ? (
+          <BookingView
+            booking={viewing}
+            onEdit={() => {
+              const next = viewing;
+              setViewing(null);
+              setEditing(next);
+            }}
+            onCopyCustomerLink={() => void copyTrackingLink(viewing)}
+            onPrintLabel={() => openShippingLabel(viewing)}
+            onCopyTrackingNumber={
+              viewing.indiaPostTrackingNumber
+                ? () => void copyTrackingNumber(viewing)
+                : undefined
+            }
+          />
+        ) : null}
+      </Modal>
 
       <Modal
         open={editing !== null}

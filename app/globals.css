@@ -1048,6 +1048,43 @@ p {
   color: var(--ink);
 }
 
+.booking-id-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  cursor: pointer;
+  transition: color 160ms ease;
+  text-align: left;
+}
+
+.booking-id-button::after {
+  content: "›";
+  font-weight: 500;
+  color: var(--gold);
+  transition: transform 180ms ease;
+}
+
+.booking-id-button:hover {
+  color: var(--gold);
+}
+
+.booking-id-button:hover::after {
+  transform: translateX(3px);
+}
+
+.booking-id-button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -1300,6 +1337,66 @@ p {
   background: #8a3a3a;
 }
 
+/* Read-only variant: used on the customer tracking page where the chip
+   communicates state but is not an interactive control. */
+.status-chip[data-readonly="true"] {
+  cursor: default;
+  padding-right: 12px;
+}
+
+.status-chip[data-readonly="true"]:hover {
+  transform: none;
+}
+
+.status-chip[data-readonly="true"]::after {
+  display: none;
+}
+
+.tracking-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.tracking-shell .container > section + section,
+.tracking-shell .container > section + .tracking-help-line {
+  margin-top: var(--space-2);
+}
+
+.tracking-courier {
+  margin-top: 18px;
+}
+
+.tracking-courier-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 14px;
+  margin: 6px 0 14px;
+}
+
+.tracking-courier-row .tracking-number {
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.tracking-meta {
+  margin-top: 14px;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+  letter-spacing: 0.02em;
+}
+
+.tracking-help-line {
+  margin-top: 24px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
 .row-actions-more {
   position: relative;
   display: inline-block;
@@ -1533,6 +1630,8 @@ p {
   box-shadow: var(--shadow);
   color: inherit;
   overflow: hidden;
+  margin: auto;
+  inset: 0;
 }
 
 .modal-dialog::backdrop {
@@ -1573,6 +1672,97 @@ p {
   padding: 22px;
   max-height: calc(100vh - 180px);
   overflow-y: auto;
+}
+
+.tracking-number {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+  color: var(--ink);
+  word-break: break-all;
+}
+
+.tracking-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bookings-table .tracking-line {
+  margin: 6px 0 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.86rem;
+  color: var(--ink);
+}
+
+.bookings-table .tracking-line .tracking-eyebrow {
+  color: var(--gold);
+  font-size: 0.66rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.copy-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--gold);
+  font: inherit;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+
+.copy-link:hover {
+  color: var(--ink);
+}
+
+.copy-link:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.booking-view {
+  display: grid;
+  gap: 16px;
+}
+
+.booking-view .booking-card-row {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.booking-view .booking-card-row:last-of-type {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.booking-view-empty {
+  color: var(--ink-soft);
+}
+
+.booking-view-address {
+  display: block;
+  white-space: pre-line;
+}
+
+.view-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid var(--line-soft);
 }
 
 @media (min-width: 720px) {

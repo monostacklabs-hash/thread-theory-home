@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shipping Label — Thread Theory Home</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream: #FAF8F3;
+      --cream-darker: #E8E1D5;
+      --dark: #1C1712;
+      --dark-muted: #4A4440;
+      --gold: oklch(64% 0.10 75);
+      --sans: 'DM Sans', Helvetica, sans-serif;
+      --serif: 'Cormorant Garamond', Georgia, serif;
+    }
+    body { background: var(--cream); color: var(--dark); font-family: var(--sans); font-weight: 300; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+    /* ─────────── EDITOR (screen only) ─────────── */
+    .editor {
+      max-width: 980px; margin: 0 auto; padding: 32px 24px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+    }
+    @media (max-width: 800px) { .editor { grid-template-columns: 1fr; } }
+
+    .editor-header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 8px; padding-bottom: 20px; border-bottom: 1px solid var(--cream-darker); }
+    .editor-title { font-family: var(--serif); font-size: 1.4rem; font-weight: 300; letter-spacing: 0.02em; }
+    .editor-title span { color: var(--gold); }
+    .editor-sub { font-size: 0.66rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dark-muted); margin-top: 4px; }
+    .editor-actions { display: flex; gap: 10px; }
+    .btn { padding: 10px 20px; font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; border: 1px solid var(--cream-darker); background: transparent; color: var(--dark); font-family: var(--sans); transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+    .btn:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-primary { background: var(--dark); color: var(--cream); border-color: var(--dark); }
+    .btn-primary:hover { background: var(--gold); border-color: var(--gold); color: #fff; }
+
+    .panel { background: #fff; border: 1px solid var(--cream-darker); padding: 24px; }
+    .panel-title { font-size: 0.66rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+    .panel-title::before { content: ''; display: block; width: 16px; height: 1px; background: var(--gold); }
+
+    .field { margin-bottom: 14px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    label { font-size: 0.64rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dark-muted); display: block; margin-bottom: 6px; }
+    input, textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--cream-darker); background: var(--cream); color: var(--dark); font-family: var(--sans); font-size: 0.86rem; font-weight: 400; outline: none; transition: border-color 0.2s; }
+    input:focus, textarea:focus { border-color: var(--gold); }
+    textarea { resize: vertical; min-height: 64px; }
+
+    .saved-note { font-size: 0.7rem; color: var(--gold); margin-top: 8px; opacity: 0; transition: opacity 0.3s; }
+    .saved-note.show { opacity: 1; }
+
+    /* ─────────── THE LABEL (minimal!) ─────────── */
+    .label-wrap { display: flex; justify-content: center; padding: 16px 0 60px; }
+
+    .label {
+      width: 148mm; height: 210mm;
+      background: #fff;
+      color: #000;
+      padding: 14mm;
+      font-family: var(--sans);
+      font-size: 11pt;
+      line-height: 1.4;
+      border: 1px solid #000;
+      display: flex; flex-direction: column;
+      box-shadow: 0 8px 32px rgba(28,23,18,0.08);
+    }
+
+    /* Brand */
+    .l-brand-block { text-align: center; padding-bottom: 7mm; border-bottom: 1px solid #000; }
+    .l-brand { font-family: var(--serif); font-size: 16pt; font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; }
+    .l-handle { font-size: 8pt; letter-spacing: 0.18em; color: #666; margin-top: 1.5mm; }
+
+    /* TO — the prominent one */
+    .l-to { flex: 1; padding-top: 9mm; }
+    .l-section-label { font-size: 8pt; letter-spacing: 0.22em; text-transform: uppercase; color: #888; margin-bottom: 4mm; }
+    .l-to-name { font-size: 17pt; font-weight: 700; letter-spacing: 0.02em; margin-bottom: 3mm; text-transform: uppercase; }
+    .l-to-addr { font-size: 13pt; line-height: 1.55; white-space: pre-line; font-weight: 400; text-transform: uppercase; }
+    .l-to-phone { font-size: 12pt; margin-top: 4mm; font-weight: 500; }
+
+    /* FROM */
+    .l-from { padding-top: 6mm; margin-top: 6mm; border-top: 1px dashed #999; }
+    .l-from-name { font-size: 9.5pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
+    .l-from-addr { font-size: 9pt; line-height: 1.45; white-space: pre-line; color: #333; margin-top: 1mm; text-transform: uppercase; }
+    .l-from-phone { font-size: 9pt; color: #333; margin-top: 0.5mm; }
+
+    /* Footer with order ref */
+    .l-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 5mm; margin-top: 5mm; border-top: 1px solid #000; font-size: 8.5pt; color: #555; letter-spacing: 0.04em; }
+    .l-footer span:first-child { font-weight: 600; color: #000; letter-spacing: 0.1em; text-transform: uppercase; }
+
+    /* ─────────── PRINT — A4 paper, single label centered with cut marks ─────────── */
+    @media print {
+      @page { size: A4 portrait; margin: 0; }
+      html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+      .editor, .editor-header, .panel { display: none !important; }
+      .label-wrap {
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 210mm;
+        height: 297mm;
+        page-break-after: always;
+      }
+      .label {
+        width: 148mm !important; height: 210mm !important;
+        margin: 0 !important;
+        border: 1px dashed #aaa !important;
+        box-shadow: none !important;
+        position: relative;
+      }
+      /* Corner cut marks */
+      .label::before, .label::after {
+        content: '';
+        position: absolute;
+        width: 8mm; height: 8mm;
+        border: 1px solid #000;
+        pointer-events: none;
+      }
+      .label::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+      .label::after { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+      .cut-mark-tr, .cut-mark-bl { display: block !important; }
+    }
+
+    /* Corner marks for top-right and bottom-left (print only) */
+    .cut-mark-tr, .cut-mark-bl { display: none; position: absolute; width: 8mm; height: 8mm; border: 1px solid #000; pointer-events: none; }
+    .cut-mark-tr { top: -1px; right: -1px; border-left: none; border-bottom: none; }
+    .cut-mark-bl { bottom: -1px; left: -1px; border-right: none; border-top: none; }
+    .label { position: relative; }
+  </style>
+</head>
+<body>
+
+<div class="editor">
+  <div class="editor-header">
+    <div>
+      <div class="editor-title">Thread <span>Theory</span> Home</div>
+      <div class="editor-sub">Shipping Label · Speed Post</div>
+    </div>
+    <div class="editor-actions">
+      <a href="admin.html" class="btn">← Back to Admin</a>
+      <button class="btn-primary btn" onclick="window.print()">Print Label</button>
+    </div>
+  </div>
+
+  <!-- LEFT: Sender (saved) -->
+  <div class="panel">
+    <div class="panel-title">Return Address (saved on this device)</div>
+    <div class="field">
+      <label>Sender Name</label>
+      <input type="text" id="fromName" placeholder="Thread Theory Home" />
+    </div>
+    <div class="field">
+      <label>Pickup Address</label>
+      <textarea id="fromAddr" rows="3" placeholder="House / Street, Area,&#10;City, State – PIN"></textarea>
+    </div>
+    <div class="field">
+      <label>Sender Phone</label>
+      <input type="text" id="fromPhone" placeholder="+91 98XXXX XXXX" />
+    </div>
+    <button class="btn" onclick="saveSender()">Save</button>
+    <div class="saved-note" id="savedNote">✓ Saved</div>
+  </div>
+
+  <!-- RIGHT: Recipient -->
+  <div class="panel">
+    <div class="panel-title">Recipient Details</div>
+    <div class="field">
+      <label>Customer Name</label>
+      <input type="text" id="toName" placeholder="Recipient Full Name" />
+    </div>
+    <div class="field">
+      <label>Delivery Address</label>
+      <textarea id="toAddr" rows="3" placeholder="House / Flat no., Street,&#10;Area / Landmark,&#10;City, State – PIN"></textarea>
+    </div>
+    <div class="field">
+      <label>Recipient Phone</label>
+      <input type="text" id="toPhone" placeholder="98XXXX XXXX" />
+    </div>
+    <div class="field">
+      <label>Order ID (optional, for your reference)</label>
+      <input type="text" id="orderId" placeholder="TTH001" />
+    </div>
+  </div>
+</div>
+
+<!-- ─────────── THE LABEL ─────────── -->
+<div class="label-wrap">
+  <div class="label" id="label">
+    <span class="cut-mark-tr"></span>
+    <span class="cut-mark-bl"></span>
+
+    <!-- Brand -->
+    <div class="l-brand-block">
+      <div class="l-brand">Thread Theory Home</div>
+      <div class="l-handle">@threadtheoryhome.in</div>
+    </div>
+
+    <!-- TO -->
+    <div class="l-to">
+      <div class="l-section-label">Deliver To</div>
+      <div class="l-to-name" id="lToName">—</div>
+      <div class="l-to-addr" id="lToAddr">—</div>
+      <div class="l-to-phone" id="lToPhone">📞 —</div>
+    </div>
+
+    <!-- FROM -->
+    <div class="l-from">
+      <div class="l-section-label">If undelivered, return to</div>
+      <div class="l-from-name" id="lFromName">—</div>
+      <div class="l-from-addr" id="lFromAddr">—</div>
+      <div class="l-from-phone" id="lFromPhone">—</div>
+    </div>
+
+    <!-- Footer -->
+    <div class="l-footer">
+      <span id="lOrderId">—</span>
+      <span id="lDate">—</span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const LS = (k, d) => { try { const v = localStorage.getItem('tth_label_' + k); return v !== null ? v : d; } catch { return d; } };
+  const LSSet = (k, v) => { try { localStorage.setItem('tth_label_' + k, v); } catch {} };
+  const $ = id => document.getElementById(id);
+
+  const fromFields = ['fromName', 'fromAddr', 'fromPhone'];
+  const toFields = ['toName', 'toAddr', 'toPhone', 'orderId'];
+
+  function init() {
+    // Load saved sender
+    fromFields.forEach(f => { $(f).value = LS(f, '') || ''; });
+    if (!$('fromName').value) $('fromName').value = 'Thread Theory Home';
+
+    // Pre-fill from URL params (when opened from admin)
+    const p = new URLSearchParams(window.location.search);
+    const set = (id, key) => { const v = p.get(key); if (v) $(id).value = v; };
+    set('orderId', 'order');
+    set('toName', 'customer');
+    set('toAddr', 'address');
+    set('toPhone', 'phone');
+
+    refreshLabel();
+  }
+
+  function saveSender() {
+    fromFields.forEach(f => LSSet(f, $(f).value));
+    const note = $('savedNote'); note.classList.add('show');
+    setTimeout(() => note.classList.remove('show'), 1800);
+    refreshLabel();
+  }
+  window.saveSender = saveSender;
+
+  function refreshLabel() {
+    // Normalize: trim + collapse whitespace, preserve line breaks
+    const clean = s => (s || '').split('\n').map(l => l.trim().replace(/\s+/g, ' ')).filter(Boolean).join('\n');
+    const cleanInline = s => (s || '').trim().replace(/\s+/g, ' ');
+
+    // TO (uppercase via CSS, but normalize whitespace here)
+    $('lToName').textContent = cleanInline($('toName').value) || '—';
+    $('lToAddr').textContent = clean($('toAddr').value) || '—';
+    $('lToPhone').textContent = '📞 ' + (cleanInline($('toPhone').value) || '—');
+
+    // FROM
+    $('lFromName').textContent = cleanInline($('fromName').value) || '—';
+    $('lFromAddr').textContent = clean($('fromAddr').value) || '—';
+    $('lFromPhone').textContent = cleanInline($('fromPhone').value) || '—';
+
+    // Footer
+    $('lOrderId').textContent = $('orderId').value ? 'Ref: ' + cleanInline($('orderId').value) : '';
+    $('lDate').textContent = new Date().toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+  }
+
+  [...fromFields, ...toFields].forEach(f => {
+    $(f).addEventListener('input', refreshLabel);
+  });
+
+  init();
+</script>
+
+</body>
+</html>
