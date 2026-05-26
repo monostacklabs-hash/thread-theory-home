@@ -31,14 +31,19 @@ export function LoginForm() {
 
       if (!response.ok) {
         const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(body?.error || "Could not create admin session");
+        throw new Error(
+          body?.error ||
+            "That sign-in didn’t go through. Check your email and password, then try again."
+        );
       }
 
       router.push("/admin");
       router.refresh();
     } catch (caughtError) {
       const message =
-        caughtError instanceof Error ? caughtError.message : "Unable to sign in right now";
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Sign-in unavailable. Check your connection and try again in a moment.";
       setError(message);
     } finally {
       setIsSubmitting(false);
@@ -48,7 +53,7 @@ export function LoginForm() {
   return (
     <form className="form-grid" onSubmit={handleSubmit}>
       <div className="field">
-        <label htmlFor="email">Admin email</label>
+        <label htmlFor="email">Email</label>
         <input
           id="email"
           type="email"
@@ -71,10 +76,14 @@ export function LoginForm() {
         />
       </div>
 
-      {error ? <p className="field-help">{error}</p> : null}
+      {error ? (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      ) : null}
 
       <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Signing in..." : "Sign in"}
+        {isSubmitting ? "Signing in…" : "Sign in"}
       </button>
     </form>
   );

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LoginForm } from "@/components/admin/login-form";
 
 export const metadata: Metadata = {
@@ -13,17 +14,17 @@ export default function AdminLoginPage() {
   return (
     <main className="login-shell">
       <div className="container">
-        <section className="login-panel reveal">
-          <span className="eyebrow">Admin Access</span>
-          <div className="section-heading">
-            <h2>Manage bookings without customer accounts.</h2>
-            <p>
-              Sign in with the Firebase admin account. Sessions are stored in a secure HTTP-only
-              cookie after server-side validation.
-            </p>
-          </div>
+        <section className="login-panel reveal" aria-labelledby="admin-login-heading">
+          <span className="panel-label">Admin</span>
+          <h1 id="admin-login-heading">Sign in to manage bookings.</h1>
+          <p>Sign in with your team account. We&rsquo;ll keep you signed in on this device.</p>
           <LoginForm />
         </section>
+        <p className="login-foot">
+          <Link className="login-back" href="/">
+            Back to Thread Theory Home
+          </Link>
+        </p>
       </div>
     </main>
   );

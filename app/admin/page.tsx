@@ -47,15 +47,18 @@ export default async function AdminPage() {
       <div className="container">
         <section className="admin-header reveal">
           <span className="eyebrow">Admin · {session.email}</span>
-          <h1>Order dashboard.</h1>
-          <p>
-            Create a booking after DM confirmation is complete. Copy the tracking link and
-            share it directly with the customer on Instagram.
-          </p>
+          <h1>Orders</h1>
+          <p>Create a booking after the DM is confirmed, then copy the tracking link to send back on Instagram.</p>
         </section>
 
         <AdminDashboard initialBookings={bookings} />
       </div>
+      <footer className="admin-foot">
+        <div className="container admin-foot-inner">
+          <span>Thread Theory · Admin</span>
+          <span>Signed in as {session.email}</span>
+        </div>
+      </footer>
     </main>
   );
 }
