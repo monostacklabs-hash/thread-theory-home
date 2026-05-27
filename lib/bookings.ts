@@ -12,6 +12,12 @@ export const STATUS_LABELS: Record<BookingStatus, string> = {
   cancelled: "Cancelled"
 };
 
+export const PRINTABLE_STATUSES: ReadonlyArray<BookingStatus> = ["confirmed", "preparing"];
+
+export function isPrintableStatus(status: BookingStatus): boolean {
+  return PRINTABLE_STATUSES.includes(status);
+}
+
 export function formatBookingId(sequence: number) {
   return `${BOOKING_PREFIX}-${sequence.toString().padStart(4, "0")}`;
 }

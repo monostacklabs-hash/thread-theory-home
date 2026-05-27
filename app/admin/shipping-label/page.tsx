@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   }
 };
 
+const MAX_RECIPIENTS = 10;
+
 type RecipientPrefill = {
   name: string;
   phone: string;
@@ -20,17 +22,11 @@ type RecipientPrefill = {
   bookingId: string;
 };
 
-async function loadRecipient(bookingId: string | undefined): Promise<RecipientPrefill> {
-  const empty: RecipientPrefill = { name: "", phone: "", address: "", bookingId: "" };
-
-  if (!bookingId) {
-    return empty;
-  }
-
+async function loadRecipient(bookingId: string): Promise<RecipientPrefill | null> {
   const snapshot = await getAdminDb().collection("bookings").doc(bookingId).get();
 
   if (!snapshot.exists) {
-    return empty;
+    return null;
   }
 
   const data = snapshot.data() ?? {};
@@ -43,6 +39,19 @@ async function loadRecipient(bookingId: string | undefined): Promise<RecipientPr
   };
 }
 
+function normalizeBookingIds(raw: string | string[] | undefined): string[] {
+  const values = Array.isArray(raw) ? raw : raw ? [raw] : [];
+  const trimmed = values.map((value) => value.trim()).filter(Boolean);
+  const unique: string[] = [];
+  for (const value of trimmed) {
+    if (!unique.includes(value)) {
+      unique.push(value);
+    }
+    if (unique.length >= MAX_RECIPIENTS) break;
+  }
+  return unique;
+}
+
 type ShippingLabelPageProps = {
   searchParams: Promise<{ bookingId?: string | string[] }>;
 };
@@ -51,11 +60,16 @@ export default async function ShippingLabelPage({ searchParams }: ShippingLabelP
   await requireAdminSession();
 
   const params = await searchParams;
-  const rawBookingId = params.bookingId;
-  const bookingId = Array.isArray(rawBookingId) ? rawBookingId[0] : rawBookingId;
-  const trimmedBookingId = bookingId?.trim() || undefined;
+  const bookingIds = normalizeBookingIds(params.bookingId);
 
-  const initialRecipient = await loadRecipient(trimmedBookingId);
+  const loaded = await Promise.all(bookingIds.map((id) => loadRecipient(id)));
+  const initialRecipients: RecipientPrefill[] = loaded.filter(
+    (entry): entry is RecipientPrefill => entry !== null
+  );
 
-  return <ShippingLabelClient initialRecipient={initialRecipient} />;
+  if (initialRecipients.length === 0) {
+    initialRecipients.push({ name: "", phone: "", address: "", bookingId: "" });
+  }
+
+  return <ShippingLabelClient initialRecipients={initialRecipients} />;
 }

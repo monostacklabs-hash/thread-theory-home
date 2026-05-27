@@ -10,8 +10,10 @@ type InitialRecipient = {
   bookingId: string;
 };
 
+type RecipientState = InitialRecipient;
+
 type Props = {
-  initialRecipient: InitialRecipient;
+  initialRecipients: InitialRecipient[];
 };
 
 const LS_KEYS = {
@@ -40,15 +42,12 @@ function formatDate(date: Date): string {
   });
 }
 
-export default function ShippingLabelClient({ initialRecipient }: Props) {
+export default function ShippingLabelClient({ initialRecipients }: Props) {
   const [fromName, setFromName] = useState("Thread Theory Home");
   const [fromAddr, setFromAddr] = useState("");
   const [fromPhone, setFromPhone] = useState("");
 
-  const [toName, setToName] = useState(initialRecipient.name);
-  const [toAddr, setToAddr] = useState(initialRecipient.address);
-  const [toPhone, setToPhone] = useState(initialRecipient.phone);
-  const [orderId, setOrderId] = useState(initialRecipient.bookingId);
+  const [recipients, setRecipients] = useState<RecipientState[]>(initialRecipients);
 
   const [savedVisible, setSavedVisible] = useState(false);
   const [todayLabel, setTodayLabel] = useState("");
@@ -74,6 +73,12 @@ export default function ShippingLabelClient({ initialRecipient }: Props) {
     };
   }, []);
 
+  function updateRecipient(index: number, patch: Partial<RecipientState>) {
+    setRecipients((current) =>
+      current.map((entry, idx) => (idx === index ? { ...entry, ...patch } : entry))
+    );
+  }
+
   function saveSender() {
     try {
       window.localStorage.setItem(LS_KEYS.fromName, fromName);
@@ -91,14 +96,13 @@ export default function ShippingLabelClient({ initialRecipient }: Props) {
     window.print();
   }
 
-  const renderedToName = cleanInline(toName) || "—";
-  const renderedToAddr = cleanMultiline(toAddr) || "—";
-  const renderedToPhone = `📞 ${cleanInline(toPhone) || "—"}`;
   const renderedFromName = cleanInline(fromName) || "—";
   const renderedFromAddr = cleanMultiline(fromAddr) || "—";
   const renderedFromPhone = cleanInline(fromPhone) || "—";
-  const cleanedOrderId = cleanInline(orderId);
-  const renderedOrderId = cleanedOrderId ? `Ref: ${cleanedOrderId}` : "";
+
+  const labelCount = recipients.length;
+  const printButtonLabel =
+    labelCount > 1 ? `Print ${labelCount} labels` : "Print label";
 
   return (
     <main className="admin-shell">
@@ -108,7 +112,7 @@ export default function ShippingLabelClient({ initialRecipient }: Props) {
           <h1>Shipping label</h1>
           <p>
             Pre-filled from the booking — adjust as needed, then print on A4. The sender block
-            stays saved on this device.
+            stays saved on this device. Two labels fit on one sheet.
           </p>
           <a className="login-back" href="/admin">
             Back to bookings
@@ -155,103 +159,144 @@ export default function ShippingLabelClient({ initialRecipient }: Props) {
                   onChange={(event) => setFromPhone(event.target.value)}
                 />
               </div>
-              <button type="submit" className="btn btn-secondary btn-compact">
-                Save sender
-              </button>
+              <div className="shipping-label-save-row">
+                <button type="submit" className="btn btn-secondary btn-compact">
+                  Save sender
+                </button>
+                <span
+                  className={`shipping-label-saved${savedVisible ? " show" : ""}`}
+                  aria-live="polite"
+                >
+                  ✓ Sender saved
+                </span>
+              </div>
             </form>
           </div>
 
-          <div className="admin-panel">
-            <span className="shipping-label-panel-label">Recipient</span>
-            <div className="form-grid">
-              <div className="field">
-                <label htmlFor="toName">Customer name</label>
-                <input
-                  type="text"
-                  id="toName"
-                  placeholder="Recipient full name"
-                  value={toName}
-                  onChange={(event) => setToName(event.target.value)}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="toAddr">Delivery address</label>
-                <textarea
-                  id="toAddr"
-                  rows={3}
-                  placeholder={
-                    "House / Flat no., Street,\nArea / Landmark,\nCity, State – PIN"
-                  }
-                  value={toAddr}
-                  onChange={(event) => setToAddr(event.target.value)}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="toPhone">Recipient phone</label>
-                <input
-                  type="text"
-                  id="toPhone"
-                  placeholder="98XXXX XXXX"
-                  value={toPhone}
-                  onChange={(event) => setToPhone(event.target.value)}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="orderId">Order reference (optional)</label>
-                <input
-                  type="text"
-                  id="orderId"
-                  placeholder="TTH001"
-                  value={orderId}
-                  onChange={(event) => setOrderId(event.target.value)}
-                />
-              </div>
-            </div>
+          <div className="shipping-label-recipients">
+            {recipients.map((recipient, index) => {
+              const headingSuffix = labelCount > 1 ? ` ${index + 1}` : "";
+              const idSuffix = `-${index}`;
+              return (
+                <div className="admin-panel" key={`${recipient.bookingId || "manual"}-${index}`}>
+                  <span className="shipping-label-panel-label">
+                    Recipient{headingSuffix}
+                    {recipient.bookingId ? (
+                      <small className="shipping-label-panel-ref">
+                        Ref: {recipient.bookingId}
+                      </small>
+                    ) : null}
+                  </span>
+                  <div className="form-grid">
+                    <div className="field">
+                      <label htmlFor={`toName${idSuffix}`}>Customer name</label>
+                      <input
+                        type="text"
+                        id={`toName${idSuffix}`}
+                        placeholder="Recipient full name"
+                        value={recipient.name}
+                        onChange={(event) =>
+                          updateRecipient(index, { name: event.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="field">
+                      <label htmlFor={`toAddr${idSuffix}`}>Delivery address</label>
+                      <textarea
+                        id={`toAddr${idSuffix}`}
+                        rows={3}
+                        placeholder={
+                          "House / Flat no., Street,\nArea / Landmark,\nCity, State – PIN"
+                        }
+                        value={recipient.address}
+                        onChange={(event) =>
+                          updateRecipient(index, { address: event.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="field">
+                      <label htmlFor={`toPhone${idSuffix}`}>Recipient phone</label>
+                      <input
+                        type="text"
+                        id={`toPhone${idSuffix}`}
+                        placeholder="98XXXX XXXX"
+                        value={recipient.phone}
+                        onChange={(event) =>
+                          updateRecipient(index, { phone: event.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="field">
+                      <label htmlFor={`orderId${idSuffix}`}>Order reference (optional)</label>
+                      <input
+                        type="text"
+                        id={`orderId${idSuffix}`}
+                        placeholder="TTH001"
+                        value={recipient.bookingId}
+                        onChange={(event) =>
+                          updateRecipient(index, { bookingId: event.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
         <div className="shipping-label-actions reveal reveal-delay-2">
-          <div className="shipping-label-actions-left">
-            <span
-              className={`shipping-label-saved${savedVisible ? " show" : ""}`}
-              aria-live="polite"
-            >
-              ✓ Sender saved
-            </span>
-          </div>
           <button type="button" className="btn btn-primary" onClick={handlePrint}>
-            Print label
+            {printButtonLabel}
           </button>
         </div>
 
         <div className="shipping-label-preview-wrap reveal reveal-delay-3">
-          <div className="shipping-label-doc">
-            <span className="l-cut-mark-tr" />
-            <span className="l-cut-mark-bl" />
+          <div className="shipping-label-sheet">
+            {recipients.map((recipient, index) => {
+              const renderedToName = cleanInline(recipient.name) || "—";
+              const renderedToAddr = cleanMultiline(recipient.address) || "—";
+              const renderedToPhone = `📞 ${cleanInline(recipient.phone) || "—"}`;
+              const cleanedOrderId = cleanInline(recipient.bookingId);
+              const renderedOrderId = cleanedOrderId ? `Ref: ${cleanedOrderId}` : "";
+              return (
+                <div
+                  className="shipping-label-doc"
+                  key={`slip-${recipient.bookingId || "manual"}-${index}`}
+                >
+                  <span className="l-cut-mark-tl" />
+                  <span className="l-cut-mark-tr" />
+                  <span className="l-cut-mark-bl" />
+                  <span className="l-cut-mark-br" />
 
-            <div className="l-brand-block">
-              <div className="l-brand">Thread Theory Home</div>
-              <div className="l-handle">@threadtheoryhome.in</div>
-            </div>
+                  <div className="l-brand-block">
+                    <div className="l-brand">Thread Theory Home</div>
+                    <div className="l-handle">@threadtheoryhome.in</div>
+                  </div>
 
-            <div className="l-to">
-              <div className="l-section-label">Deliver to</div>
-              <div className="l-to-name">{renderedToName}</div>
-              <div className="l-to-addr">{renderedToAddr}</div>
-              <div className="l-to-phone">{renderedToPhone}</div>
-            </div>
+                  <div className="l-body">
+                    <div className="l-to">
+                      <div className="l-section-label">Deliver to</div>
+                      <div className="l-to-name">{renderedToName}</div>
+                      <div className="l-to-addr">{renderedToAddr}</div>
+                      <div className="l-to-phone">{renderedToPhone}</div>
+                    </div>
 
-            <div className="l-from">
-              <div className="l-section-label">If undelivered, return to</div>
-              <div className="l-from-name">{renderedFromName}</div>
-              <div className="l-from-addr">{renderedFromAddr}</div>
-              <div className="l-from-phone">{renderedFromPhone}</div>
-            </div>
+                    <div className="l-from">
+                      <div className="l-section-label">If undelivered, return to</div>
+                      <div className="l-from-name">{renderedFromName}</div>
+                      <div className="l-from-addr">{renderedFromAddr}</div>
+                      <div className="l-from-phone">{renderedFromPhone}</div>
+                    </div>
+                  </div>
 
-            <div className="l-footer">
-              <span>{renderedOrderId}</span>
-              <span>{todayLabel}</span>
-            </div>
+                  <div className="l-footer">
+                    <span>{renderedOrderId}</span>
+                    <span>{todayLabel}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

@@ -1,7 +1,5 @@
 /* All styles here are scoped to the shipping label page wrapper so they
-   do not leak into the rest of the app. The earlier version used global
-   selectors (:root, body, .btn, .panel, label, input, textarea) which
-   polluted the admin design system. */
+   do not leak into the rest of the app. */
 
 .shipping-label-page {
   padding-bottom: 56px;
@@ -17,7 +15,13 @@
   .shipping-label-grid {
     grid-template-columns: 1fr 1fr;
     gap: 22px;
+    align-items: start;
   }
+}
+
+.shipping-label-recipients {
+  display: grid;
+  gap: 16px;
 }
 
 .shipping-label-actions {
@@ -29,11 +33,11 @@
   margin-top: 20px;
 }
 
-.shipping-label-actions-left {
-  margin-right: auto;
+.shipping-label-save-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
 .shipping-label-saved {
@@ -55,6 +59,7 @@
 .shipping-label-panel-label {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   color: var(--gold);
   font-size: 0.72rem;
@@ -71,6 +76,12 @@
   background: var(--gold);
 }
 
+.shipping-label-panel-ref {
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  color: var(--ink-soft);
+}
+
 .shipping-label-preview-wrap {
   display: flex;
   justify-content: center;
@@ -78,15 +89,24 @@
   padding: 0 16px;
 }
 
-/* ─── The postal label itself (148mm × 210mm). Self-contained look. ─── */
+/* The on-screen "sheet" mirrors A4 portrait and stacks slips like print. */
+.shipping-label-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 6mm;
+  width: 210mm;
+  max-width: 100%;
+}
+
+/* ─── The postal label itself (A5 landscape: 210mm × 148mm) ─── */
 
 .shipping-label-doc {
-  width: 148mm;
+  width: 210mm;
   max-width: 100%;
-  min-height: 210mm;
+  height: 148mm;
   background: #ffffff;
   color: #000000;
-  padding: 14mm;
+  padding: 10mm 12mm;
   font-family: var(--font-body), system-ui, sans-serif;
   font-size: 11pt;
   line-height: 1.4;
@@ -95,16 +115,26 @@
   flex-direction: column;
   box-shadow: 0 24px 60px rgba(31, 26, 20, 0.1);
   position: relative;
+  overflow: hidden;
 }
 
+.shipping-label-doc .l-cut-mark-tl,
 .shipping-label-doc .l-cut-mark-tr,
-.shipping-label-doc .l-cut-mark-bl {
+.shipping-label-doc .l-cut-mark-bl,
+.shipping-label-doc .l-cut-mark-br {
   display: none;
   position: absolute;
-  width: 8mm;
-  height: 8mm;
+  width: 6mm;
+  height: 6mm;
   border: 1px solid #000000;
   pointer-events: none;
+}
+
+.shipping-label-doc .l-cut-mark-tl {
+  top: -1px;
+  left: -1px;
+  border-right: none;
+  border-bottom: none;
 }
 
 .shipping-label-doc .l-cut-mark-tr {
@@ -121,15 +151,25 @@
   border-top: none;
 }
 
+.shipping-label-doc .l-cut-mark-br {
+  bottom: -1px;
+  right: -1px;
+  border-left: none;
+  border-top: none;
+}
+
 .shipping-label-doc .l-brand-block {
-  text-align: center;
-  padding-bottom: 7mm;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10mm;
+  padding-bottom: 4mm;
   border-bottom: 1px solid #000000;
 }
 
 .shipping-label-doc .l-brand {
   font-family: var(--font-display), Georgia, serif;
-  font-size: 16pt;
+  font-size: 14pt;
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -138,49 +178,60 @@
 .shipping-label-doc .l-handle {
   font-size: 8pt;
   letter-spacing: 0.18em;
-  color: #666666;
-  margin-top: 1.5mm;
+  color: #555555;
 }
 
-.shipping-label-doc .l-to {
+.shipping-label-doc .l-body {
   flex: 1;
-  padding-top: 9mm;
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 8mm;
+  padding-top: 5mm;
+  min-height: 0;
 }
 
 .shipping-label-doc .l-section-label {
-  font-size: 8pt;
+  font-size: 7.5pt;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: #888888;
-  margin-bottom: 4mm;
+  margin-bottom: 2.5mm;
+}
+
+.shipping-label-doc .l-to {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .shipping-label-doc .l-to-name {
-  font-size: 17pt;
+  font-size: 15pt;
   font-weight: 700;
   letter-spacing: 0.02em;
-  margin-bottom: 3mm;
+  margin-bottom: 2.5mm;
   text-transform: uppercase;
 }
 
 .shipping-label-doc .l-to-addr {
-  font-size: 13pt;
-  line-height: 1.55;
+  font-size: 12pt;
+  line-height: 1.45;
   white-space: pre-line;
   font-weight: 400;
   text-transform: uppercase;
 }
 
 .shipping-label-doc .l-to-phone {
-  font-size: 12pt;
-  margin-top: 4mm;
+  font-size: 11pt;
+  margin-top: 3mm;
   font-weight: 500;
 }
 
 .shipping-label-doc .l-from {
-  padding-top: 6mm;
-  margin-top: 6mm;
-  border-top: 1px dashed #999999;
+  padding-left: 8mm;
+  border-left: 1px dashed #999999;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .shipping-label-doc .l-from-name {
@@ -191,7 +242,7 @@
 }
 
 .shipping-label-doc .l-from-addr {
-  font-size: 9pt;
+  font-size: 8.5pt;
   line-height: 1.45;
   white-space: pre-line;
   color: #333333;
@@ -200,7 +251,7 @@
 }
 
 .shipping-label-doc .l-from-phone {
-  font-size: 9pt;
+  font-size: 8.5pt;
   color: #333333;
   margin-top: 0.5mm;
 }
@@ -209,10 +260,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 5mm;
-  margin-top: 5mm;
+  padding-top: 3.5mm;
+  margin-top: 3.5mm;
   border-top: 1px solid #000000;
-  font-size: 8.5pt;
+  font-size: 8pt;
   color: #555555;
   letter-spacing: 0.04em;
 }
@@ -224,7 +275,7 @@
   text-transform: uppercase;
 }
 
-/* ─── Print: A4 portrait, only the label shows, cut marks visible ─── */
+/* ─── Print: A4 portrait, 2 slips per sheet, no blank pages ─── */
 @media print {
   @page {
     size: A4 portrait;
@@ -238,6 +289,23 @@
     padding: 0 !important;
   }
 
+  /* Neutralise the admin layout so it doesn't push the sheet onto a 2nd page. */
+  body main.admin-shell {
+    display: block !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .shipping-label-page,
+  .shipping-label-page.container {
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
   .shipping-label-page .admin-header,
   .shipping-label-page .shipping-label-actions,
   .shipping-label-page .shipping-label-grid,
@@ -248,22 +316,31 @@
   .shipping-label-preview-wrap {
     margin: 0 !important;
     padding: 0 !important;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    width: 210mm;
-    height: 297mm;
-    page-break-after: always;
+    display: block !important;
+  }
+
+  .shipping-label-sheet {
+    width: 210mm !important;
+    max-width: none !important;
+    gap: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   .shipping-label-doc {
     margin: 0 !important;
+    width: 210mm !important;
+    height: 148mm !important;
     border: 1px dashed #aaaaaa !important;
     box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
+  .shipping-label-doc .l-cut-mark-tl,
   .shipping-label-doc .l-cut-mark-tr,
-  .shipping-label-doc .l-cut-mark-bl {
+  .shipping-label-doc .l-cut-mark-bl,
+  .shipping-label-doc .l-cut-mark-br {
     display: block !important;
   }
 }

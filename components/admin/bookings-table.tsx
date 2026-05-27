@@ -3,7 +3,12 @@
 import { ReactNode, RefObject, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { BOOKING_STATUSES, BookingRecord, BookingStatus } from "@/lib/types";
-import { buildTrackingUrl, formatBookingDate, STATUS_LABELS } from "@/lib/bookings";
+import {
+  buildTrackingUrl,
+  formatBookingDate,
+  isPrintableStatus,
+  STATUS_LABELS
+} from "@/lib/bookings";
 import { Modal } from "@/components/admin/modal";
 import { BookingForm } from "@/components/admin/booking-form";
 import { BookingView } from "@/components/admin/booking-view";
@@ -25,6 +30,8 @@ type Confirming =
   | { kind: "regenerate"; booking: BookingRecord }
   | { kind: "cancel"; booking: BookingRecord }
   | null;
+
+const MAX_LABELS_PER_PRINT = 10;
 
 type PopoverMenuProps = {
   align?: "start" | "end";
@@ -210,6 +217,7 @@ export function BookingsTable({
   const [viewing, setViewing] = useState<BookingRecord | null>(null);
   const [confirming, setConfirming] = useState<Confirming>(null);
   const [busyAction, setBusyAction] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const sortedBookings = useMemo(
     () =>
@@ -220,6 +228,42 @@ export function BookingsTable({
       }),
     [bookings]
   );
+
+  useEffect(() => {
+    setSelectedIds((current) => {
+      const stillEligible = current.filter((id) => {
+        const match = bookings.find((booking) => booking.bookingId === id);
+        return Boolean(match) && isPrintableStatus(match!.status);
+      });
+      return stillEligible.length === current.length ? current : stillEligible;
+    });
+  }, [bookings]);
+
+  const selectionAtCapacity = selectedIds.length >= MAX_LABELS_PER_PRINT;
+
+  function toggleSelect(bookingId: string) {
+    setSelectedIds((current) => {
+      if (current.includes(bookingId)) {
+        return current.filter((id) => id !== bookingId);
+      }
+      if (current.length >= MAX_LABELS_PER_PRINT) {
+        return current;
+      }
+      return [...current, bookingId];
+    });
+  }
+
+  function clearSelection() {
+    setSelectedIds([]);
+  }
+
+  function printSelectedLabels() {
+    if (selectedIds.length === 0) return;
+    const query = selectedIds
+      .map((id) => `bookingId=${encodeURIComponent(id)}`)
+      .join("&");
+    window.open(`/admin/shipping-label?${query}`, "_blank", "noopener");
+  }
 
   async function updateStatus(bookingId: string, status: BookingStatus) {
     onFlash(null);
@@ -361,6 +405,7 @@ export function BookingsTable({
 
   function renderRowMenu(booking: BookingRecord) {
     const isCancelled = booking.status === "cancelled";
+    const printable = isPrintableStatus(booking.status);
     return (
       <PopoverMenu
         bookingId={booking.bookingId}
@@ -416,18 +461,20 @@ export function BookingsTable({
               <span>Edit booking details</span>
               <small>Update customer, product, or shipping info.</small>
             </button>
-            <button
-              type="button"
-              role="menuitem"
-              className="row-actions-item"
-              onClick={() => {
-                close();
-                openShippingLabel(booking);
-              }}
-            >
-              <span>Generate shipping label</span>
-              <small>Opens a printable Speed Post label in a new tab.</small>
-            </button>
+            {printable ? (
+              <button
+                type="button"
+                role="menuitem"
+                className="row-actions-item"
+                onClick={() => {
+                  close();
+                  openShippingLabel(booking);
+                }}
+              >
+                <span>Generate shipping label</span>
+                <small>Opens a printable Speed Post label in a new tab.</small>
+              </button>
+            ) : null}
             <button
               type="button"
               role="menuitem"
@@ -476,14 +523,37 @@ export function BookingsTable({
       <ul className="bookings-cards" aria-label="Bookings">
         {sortedBookings.map((booking) => {
           const isCancelled = booking.status === "cancelled";
+          const printable = isPrintableStatus(booking.status);
+          const isSelected = selectedIds.includes(booking.bookingId);
+          const checkboxDisabled =
+            !printable || (!isSelected && selectionAtCapacity);
           return (
             <li
               key={booking.bookingId}
               className="booking-card"
               data-cancelled={isCancelled ? "true" : undefined}
+              data-selected={isSelected ? "true" : undefined}
             >
               <div className="booking-card-head">
-                <div>
+                <label
+                  className="booking-select"
+                  title={
+                    !printable
+                      ? "Labels are only available for Confirmed or Preparing orders"
+                      : checkboxDisabled
+                        ? `Up to ${MAX_LABELS_PER_PRINT} labels per print`
+                        : `Select ${booking.bookingId} for printing`
+                  }
+                >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    disabled={checkboxDisabled}
+                    onChange={() => toggleSelect(booking.bookingId)}
+                    aria-label={`Select ${booking.bookingId} for printing`}
+                  />
+                </label>
+                <div className="booking-card-head-main">
                   <button
                     type="button"
                     className="booking-id booking-id-button"
@@ -580,6 +650,7 @@ export function BookingsTable({
         <table className="bookings-table">
           <thead>
             <tr>
+              <th className="bookings-table-select" aria-label="Select"></th>
               <th>Booking</th>
               <th>Customer</th>
               <th>Product</th>
@@ -591,11 +662,36 @@ export function BookingsTable({
           <tbody>
             {sortedBookings.map((booking) => {
               const isCancelled = booking.status === "cancelled";
+              const printable = isPrintableStatus(booking.status);
+              const isSelected = selectedIds.includes(booking.bookingId);
+              const checkboxDisabled =
+                !printable || (!isSelected && selectionAtCapacity);
               return (
                 <tr
                   key={booking.bookingId}
                   data-cancelled={isCancelled ? "true" : undefined}
+                  data-selected={isSelected ? "true" : undefined}
                 >
+                  <td className="bookings-table-select">
+                    <label
+                      className="booking-select"
+                      title={
+                        !printable
+                          ? "Labels are only available for Confirmed or Preparing orders"
+                          : checkboxDisabled
+                            ? `Up to ${MAX_LABELS_PER_PRINT} labels per print`
+                            : `Select ${booking.bookingId} for printing`
+                      }
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        disabled={checkboxDisabled}
+                        onChange={() => toggleSelect(booking.bookingId)}
+                        aria-label={`Select ${booking.bookingId} for printing`}
+                      />
+                    </label>
+                  </td>
                   <td>
                     <button
                       type="button"
@@ -674,6 +770,40 @@ export function BookingsTable({
           </tbody>
         </table>
       </div>
+
+      {selectedIds.length > 0 ? (
+        <div
+          className="selection-bar"
+          role="region"
+          aria-label="Selected bookings"
+        >
+          <div className="selection-bar-inner">
+            <span className="selection-count">
+              {selectedIds.length === 1
+                ? "1 booking selected"
+                : `${selectedIds.length} bookings selected`}
+            </span>
+            <div className="selection-actions">
+              <button
+                type="button"
+                className="btn btn-ghost btn-compact"
+                onClick={clearSelection}
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary btn-compact"
+                onClick={printSelectedLabels}
+              >
+                {selectedIds.length === 1
+                  ? "Print label"
+                  : `Print ${selectedIds.length} labels`}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <Modal
         open={viewing !== null}

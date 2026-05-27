@@ -2,7 +2,7 @@
 
 import { ReactNode } from "react";
 import { BookingRecord } from "@/lib/types";
-import { formatBookingDate, STATUS_LABELS } from "@/lib/bookings";
+import { formatBookingDate, isPrintableStatus, STATUS_LABELS } from "@/lib/bookings";
 
 type BookingViewProps = {
   booking: BookingRecord;
@@ -125,13 +125,15 @@ export function BookingView({
         >
           Copy customer link
         </button>
-        <button
-          type="button"
-          className="btn btn-ghost btn-compact"
-          onClick={onPrintLabel}
-        >
-          Print shipping label
-        </button>
+        {isPrintableStatus(booking.status) ? (
+          <button
+            type="button"
+            className="btn btn-ghost btn-compact"
+            onClick={onPrintLabel}
+          >
+            Print shipping label
+          </button>
+        ) : null}
         <button
           type="button"
           className="btn btn-primary btn-compact"
