@@ -1,5 +1,5 @@
 import { FieldValue } from "firebase-admin/firestore";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getAdminSession } from "@/lib/auth";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { sendStatusPush } from "@/lib/push";
@@ -91,11 +91,12 @@ export async function PATCH(
     }
 
     if (body.status !== undefined && data.status && data.token) {
-      void sendStatusPush({
+      const pushArgs = {
         bookingId,
         token: data.token,
         status: data.status
-      });
+      };
+      after(() => sendStatusPush(pushArgs));
     }
 
     const booking: BookingRecord = {

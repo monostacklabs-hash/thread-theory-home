@@ -2,6 +2,14 @@
  * @jest-environment node
  */
 
+jest.mock("next/server", () => {
+  const actual = jest.requireActual("next/server");
+  return {
+    ...actual,
+    after: (cb: () => unknown) => cb()
+  };
+});
+
 jest.mock("@/lib/auth", () => ({
   getAdminSession: jest.fn().mockResolvedValue({ uid: "admin" })
 }));
