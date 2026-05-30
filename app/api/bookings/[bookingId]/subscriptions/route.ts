@@ -2,9 +2,9 @@ import { FieldValue } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { tokenHash } from "@/lib/push";
+import { TERMINAL_STATUSES } from "@/lib/types";
 
 const MAX_SUBSCRIPTIONS_PER_BOOKING = 10;
-const TERMINAL_STATUSES = new Set(["delivered", "cancelled"]);
 
 type Body = {
   urlToken?: string;
@@ -33,7 +33,7 @@ export async function POST(
   if (!exists || !data || data.token !== body.urlToken) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  if (TERMINAL_STATUSES.has(data.status)) {
+  if ((TERMINAL_STATUSES as ReadonlyArray<string>).includes(data.status)) {
     return NextResponse.json({ error: "Order closed" }, { status: 410 });
   }
 

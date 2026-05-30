@@ -10,6 +10,8 @@ export const BOOKING_STATUSES = [...BOOKING_TIMELINE, "cancelled"] as const;
 
 export type BookingStatus = (typeof BOOKING_STATUSES)[number];
 
+export const TERMINAL_STATUSES = ["delivered", "cancelled"] as const satisfies ReadonlyArray<BookingStatus>;
+
 export type BookingRecord = {
   bookingId: string;
   name: string;

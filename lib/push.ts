@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { BookingStatus } from "@/lib/types";
+import { BookingStatus, TERMINAL_STATUSES } from "@/lib/types";
 import { getAdminDb, getAdminMessaging } from "@/lib/firebase/admin";
 
 export const STATUS_NOTIFICATIONS: Partial<Record<BookingStatus, { title: string; body: string }>> = {
@@ -14,7 +14,6 @@ export function tokenHash(fcmToken: string): string {
   return crypto.createHash("sha256").update(fcmToken).digest("hex");
 }
 
-const TERMINAL_STATUSES: ReadonlyArray<BookingStatus> = ["delivered", "cancelled"];
 const PRUNE_ERROR_CODES = new Set([
   "messaging/registration-token-not-registered",
   "messaging/invalid-registration-token",
@@ -70,9 +69,8 @@ export async function sendStatusPush(args: {
       })
     );
 
-    if (TERMINAL_STATUSES.includes(args.status)) {
-      const remaining = await subsRef.get();
-      await Promise.all(remaining.docs.map((d) => d.ref.delete()));
+    if ((TERMINAL_STATUSES as ReadonlyArray<string>).includes(args.status)) {
+      await Promise.all(snapshot.docs.map((d) => d.ref.delete()));
     }
   } catch (caughtError) {
     console.log(

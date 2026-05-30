@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookingStatus } from "@/lib/types";
+import { BookingStatus, TERMINAL_STATUSES } from "@/lib/types";
 import { getFirebaseMessaging } from "@/lib/firebase/client";
 
 type Props = {
@@ -21,8 +21,6 @@ type UiState =
   | { kind: "denied" }
   | { kind: "error" };
 
-const TERMINAL: ReadonlyArray<BookingStatus> = ["delivered", "cancelled"];
-
 function detectIosWithoutStandalone(): boolean {
   if (typeof window === "undefined") return false;
   const isIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
@@ -39,7 +37,7 @@ export function NotifyCard({ bookingId, token, status }: Props) {
   const [state, setState] = useState<UiState>({ kind: "loading" });
 
   useEffect(() => {
-    if (TERMINAL.includes(status)) {
+    if ((TERMINAL_STATUSES as ReadonlyArray<string>).includes(status)) {
       setState({ kind: "unsupported" });
       return;
     }
@@ -116,11 +114,15 @@ export function NotifyCard({ bookingId, token, status }: Props) {
         const { deleteToken } = await import("firebase/messaging");
         await deleteToken(messaging);
       }
-      await fetch(`/api/bookings/${bookingId}/subscriptions`, {
+      const res = await fetch(`/api/bookings/${bookingId}/subscriptions`, {
         method: "DELETE",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ urlToken: token, fcmToken: state.fcmToken })
       });
+      if (!res.ok) {
+        setState({ kind: "error" });
+        return;
+      }
       setState({ kind: "idle" });
     } catch {
       setState({ kind: "error" });
