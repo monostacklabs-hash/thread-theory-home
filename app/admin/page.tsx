@@ -46,7 +46,10 @@ export default async function AdminPage() {
     <main className="admin-shell">
       <div className="container">
         <section className="admin-header reveal">
-          <span className="eyebrow">Admin · {session.email}</span>
+          <div className="admin-identity">
+            <span className="eyebrow">Admin</span>
+            <span className="admin-email">{session.email}</span>
+          </div>
           <h1>Orders</h1>
           <p>Create a booking after the DM is confirmed, then copy the tracking link to send back on Instagram.</p>
         </section>
