@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AdminDashboard } from "@/components/admin/admin-dashboard";
+import { SignOutButton } from "@/components/admin/sign-out-button";
 import { requireAdminSession } from "@/lib/auth";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { BookingRecord } from "@/lib/types";
@@ -46,9 +47,12 @@ export default async function AdminPage() {
     <main className="admin-shell">
       <div className="container">
         <section className="admin-header reveal">
-          <div className="admin-identity">
-            <span className="eyebrow">Admin</span>
-            <span className="admin-email">{session.email}</span>
+          <div className="admin-header-top">
+            <div className="admin-identity">
+              <span className="eyebrow">Admin</span>
+              <span className="admin-email">{session.email}</span>
+            </div>
+            <SignOutButton />
           </div>
           <h1>Orders</h1>
           <p>Create a booking after the DM is confirmed, then copy the tracking link to send back on Instagram.</p>

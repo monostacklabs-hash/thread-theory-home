@@ -19,7 +19,6 @@ export function AdminDashboard({ initialBookings }: { initialBookings: BookingRe
   const [bookings, setBookings] = useState(initialBookings);
   const [flash, setFlash] = useState<FlashMessage>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     if (!flash) return;
@@ -48,33 +47,18 @@ export function AdminDashboard({ initialBookings }: { initialBookings: BookingRe
     setBookings(nextBookings);
   }
 
-  async function handleLogout() {
-    setIsLoggingOut(true);
-    await fetch("/api/admin/logout", { method: "POST" });
-    window.location.href = "/admin/login";
-  }
 
   return (
     <section className="admin-stack reveal reveal-delay-1">
       <div className="admin-actions">
         <span className="badge">{bookingCountLabel(bookings.length)}</span>
-        <div className="admin-actions-right">
-          <button
-            className="btn btn-primary"
-            type="button"
-            onClick={() => setIsCreateOpen(true)}
-          >
-            New booking
-          </button>
-          <button
-            className="btn btn-secondary"
-            type="button"
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-          >
-            {isLoggingOut ? "Signing out…" : "Sign out"}
-          </button>
-        </div>
+        <button
+          className="btn btn-primary"
+          type="button"
+          onClick={() => setIsCreateOpen(true)}
+        >
+          New booking
+        </button>
       </div>
 
       {flash ? (
