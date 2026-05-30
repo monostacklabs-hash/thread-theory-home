@@ -33,6 +33,34 @@ function hasPushSupport(): boolean {
   return "PushManager" in window && "serviceWorker" in window.navigator;
 }
 
+function storageKey(bookingId: string): string {
+  return `tth.notify.${bookingId}`;
+}
+
+function readStoredToken(bookingId: string): string | null {
+  try {
+    return window.localStorage.getItem(storageKey(bookingId));
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredToken(bookingId: string, fcmToken: string): void {
+  try {
+    window.localStorage.setItem(storageKey(bookingId), fcmToken);
+  } catch {
+    /* localStorage unavailable (private mode); UI state still works for this session */
+  }
+}
+
+function clearStoredToken(bookingId: string): void {
+  try {
+    window.localStorage.removeItem(storageKey(bookingId));
+  } catch {
+    /* ignore */
+  }
+}
+
 export function NotifyCard({ bookingId, token, status }: Props) {
   const [state, setState] = useState<UiState>({ kind: "loading" });
 
@@ -54,8 +82,45 @@ export function NotifyCard({ bookingId, token, status }: Props) {
       setState({ kind: "denied" });
       return;
     }
+    if (permission === "granted") {
+      const storedToken = readStoredToken(bookingId);
+      if (storedToken) {
+        setState({ kind: "success", fcmToken: storedToken });
+        return;
+      }
+    }
     setState({ kind: "idle" });
-  }, [status]);
+  }, [status, bookingId]);
+
+  // Foreground delivery: Firebase suppresses the service worker's
+  // onBackgroundMessage whenever any same-origin tab is visible, routing the
+  // push to onMessage instead. Without this handler those pushes are dropped.
+  useEffect(() => {
+    if (state.kind !== "success") return;
+    let active = true;
+    let unsubscribe = () => {};
+    (async () => {
+      const messaging = await getFirebaseMessaging();
+      if (!messaging || !active) return;
+      const { onMessage } = await import("firebase/messaging");
+      unsubscribe = onMessage(messaging, (payload) => {
+        if (!payload.notification) return;
+        const { title, body } = payload.notification;
+        const link = payload.fcmOptions?.link || "/";
+        navigator.serviceWorker.getRegistration("/firebase-messaging-sw.js").then((reg) => {
+          reg?.showNotification(title ?? "Order update", {
+            body,
+            icon: "/icon.svg",
+            data: { link }
+          });
+        });
+      });
+    })();
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [state.kind]);
 
   async function handleSubscribe() {
     setState({ kind: "requesting" });
@@ -100,6 +165,7 @@ export function NotifyCard({ bookingId, token, status }: Props) {
         setState({ kind: "error" });
         return;
       }
+      writeStoredToken(bookingId, fcmToken);
       setState({ kind: "success", fcmToken });
     } catch {
       setState({ kind: "error" });
@@ -123,6 +189,7 @@ export function NotifyCard({ bookingId, token, status }: Props) {
         setState({ kind: "error" });
         return;
       }
+      clearStoredToken(bookingId);
       setState({ kind: "idle" });
     } catch {
       setState({ kind: "error" });

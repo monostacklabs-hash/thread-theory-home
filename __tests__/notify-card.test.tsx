@@ -28,6 +28,7 @@ function setMatchMedia(standalone: boolean) {
 describe("<NotifyCard />", () => {
   beforeEach(() => {
     setMatchMedia(false);
+    window.localStorage.clear();
   });
 
   it("renders nothing when serviceWorker is unavailable", () => {
@@ -76,5 +77,40 @@ describe("<NotifyCard />", () => {
     );
 
     expect(getByRole("button", { name: /notify me/i })).toBeInTheDocument();
+  });
+
+  it("rehydrates to the subscribed state on mount when this device already opted in", () => {
+    (window.navigator as unknown as { serviceWorker: object }).serviceWorker = {};
+    (window as unknown as { PushManager: object }).PushManager = {};
+    (window as unknown as { Notification: { permission: string } }).Notification = {
+      permission: "granted"
+    };
+    setUserAgent("Mozilla/5.0 (Linux; Android 14) Chrome/120");
+    setMatchMedia(false);
+    window.localStorage.setItem("tth.notify.TTH-1", "stored-fcm-token");
+
+    const { getByRole, queryByRole } = render(
+      <NotifyCard bookingId="TTH-1" token="t" status="preparing" />
+    );
+
+    expect(getByRole("button", { name: /stop notifications/i })).toBeInTheDocument();
+    expect(queryByRole("button", { name: /notify me/i })).toBeNull();
+  });
+
+  it("shows the idle CTA when permission is granted but no stored subscription exists", () => {
+    (window.navigator as unknown as { serviceWorker: object }).serviceWorker = {};
+    (window as unknown as { PushManager: object }).PushManager = {};
+    (window as unknown as { Notification: { permission: string } }).Notification = {
+      permission: "granted"
+    };
+    setUserAgent("Mozilla/5.0 (Linux; Android 14) Chrome/120");
+    setMatchMedia(false);
+
+    const { getByRole, queryByRole } = render(
+      <NotifyCard bookingId="TTH-1" token="t" status="preparing" />
+    );
+
+    expect(getByRole("button", { name: /notify me/i })).toBeInTheDocument();
+    expect(queryByRole("button", { name: /stop notifications/i })).toBeNull();
   });
 });
