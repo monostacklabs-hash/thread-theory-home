@@ -880,6 +880,51 @@ p {
   gap: 14px;
 }
 
+.admin-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.admin-identity {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 0;
+}
+
+.admin-email {
+  font-size: 0.86rem;
+  letter-spacing: 0.01em;
+  color: var(--ink-soft);
+  word-break: break-word;
+}
+
+.admin-signout {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 6px 2px;
+  color: var(--ink-soft);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+
+.admin-signout:hover {
+  color: var(--ink);
+}
+
+.admin-signout:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
 .admin-shell .admin-header h1 {
   margin: 0;
   font-size: clamp(1.6rem, 3.4vw, 2.1rem);
@@ -892,6 +937,20 @@ p {
   font-size: 0.96rem;
   line-height: 1.55;
   max-width: 60ch;
+}
+
+/* Tighten the admin header on phones so bookings surface sooner. */
+@media (max-width: 719px) {
+  .admin-shell .admin-header {
+    padding: 20px;
+    gap: 10px;
+  }
+
+  .admin-shell .admin-header p {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
 }
 
 .login-panel {
@@ -1176,12 +1235,6 @@ p {
   gap: 12px;
   align-items: center;
   justify-content: space-between;
-}
-
-.admin-actions-right {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
 }
 
 .bookings-cards {
@@ -1483,6 +1536,13 @@ body:has(.selection-bar) {
   font-size: 1.15rem;
   font-weight: 600;
   letter-spacing: 0.06em;
+}
+
+.track-copied-note {
+  margin-left: 10px;
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+  letter-spacing: 0.02em;
 }
 
 .tracking-meta {
@@ -1790,6 +1850,19 @@ body:has(.selection-bar) {
   flex-wrap: wrap;
 }
 
+a.tracking-number-link {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+
+a.tracking-number-link:hover {
+  color: var(--ink);
+}
+
 .bookings-table .tracking-line {
   margin: 6px 0 0;
   display: flex;
@@ -1886,4 +1959,52 @@ body:has(.selection-bar) {
   .bookings-table-shell {
     display: block;
   }
+}
+
+/* Notify card on the tracking page */
+.notify-card {
+  margin-top: 1.5rem;
+}
+
+.notify-card .notify-button {
+  margin-top: 0.75rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--ink, #1d2740);
+  background: var(--ink, #1d2740);
+  color: #f6efe5;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, transform 120ms ease;
+}
+
+.notify-card .notify-button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.notify-card .notify-button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.notify-card .notify-success {
+  margin-top: 0.5rem;
+  color: #2a6a3e;
+  font-weight: 500;
+}
+
+.notify-card .notify-stop {
+  display: inline-block;
+  margin-top: 0.25rem;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.notify-card .notify-error {
+  margin-top: 0.5rem;
+  color: #a83232;
+  font-size: 0.9rem;
 }
