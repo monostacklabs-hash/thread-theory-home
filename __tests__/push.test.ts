@@ -1,4 +1,4 @@
-import { STATUS_NOTIFICATIONS } from "@/lib/push";
+import { STATUS_NOTIFICATIONS, tokenHash } from "@/lib/push";
 
 describe("STATUS_NOTIFICATIONS", () => {
   it("defines title and body for confirmed, preparing, shipped, delivered, cancelled", () => {
@@ -26,5 +26,17 @@ describe("STATUS_NOTIFICATIONS", () => {
 
   it("does not define a notification for order_received", () => {
     expect(STATUS_NOTIFICATIONS.order_received).toBeUndefined();
+  });
+});
+
+describe("tokenHash", () => {
+  it("returns a stable sha256 hex string", () => {
+    const hash = tokenHash("example-fcm-token");
+    expect(hash).toMatch(/^[a-f0-9]{64}$/);
+    expect(tokenHash("example-fcm-token")).toBe(hash);
+  });
+
+  it("returns different hashes for different inputs", () => {
+    expect(tokenHash("a")).not.toBe(tokenHash("b"));
   });
 });

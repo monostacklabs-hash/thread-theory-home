@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { BookingStatus } from "@/lib/types";
 
 export const STATUS_NOTIFICATIONS: Partial<Record<BookingStatus, { title: string; body: string }>> = {
@@ -7,3 +8,7 @@ export const STATUS_NOTIFICATIONS: Partial<Record<BookingStatus, { title: string
   delivered: { title: "Delivered", body: "Hope you love your bedsheets. Thanks for choosing us." },
   cancelled: { title: "Order cancelled", body: "Reach out on Instagram if this looks wrong." }
 };
+
+export function tokenHash(fcmToken: string): string {
+  return crypto.createHash("sha256").update(fcmToken).digest("hex");
+}
