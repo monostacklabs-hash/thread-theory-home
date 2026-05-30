@@ -3,10 +3,12 @@
 import { FirebaseApp, getApp, getApps, initializeApp } from "firebase/app";
 import { Analytics, getAnalytics, isSupported } from "firebase/analytics";
 import { Auth, getAuth } from "firebase/auth";
+import { Messaging, getMessaging, isSupported as isMessagingSupported } from "firebase/messaging";
 
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
 let analytics: Analytics | null | undefined;
+let messaging: Messaging | null | undefined;
 
 export function getFirebaseClientApp() {
   if (!app) {
@@ -46,4 +48,18 @@ export async function getFirebaseAnalytics() {
 
   analytics = getAnalytics(getFirebaseClientApp());
   return analytics;
+}
+
+export async function getFirebaseMessaging() {
+  if (messaging !== undefined) {
+    return messaging;
+  }
+
+  if (!(await isMessagingSupported())) {
+    messaging = null;
+    return messaging;
+  }
+
+  messaging = getMessaging(getFirebaseClientApp());
+  return messaging;
 }
