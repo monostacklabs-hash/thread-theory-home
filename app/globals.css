@@ -1887,3 +1887,51 @@ body:has(.selection-bar) {
     display: block;
   }
 }
+
+/* Notify card on the tracking page */
+.notify-card {
+  margin-top: 1.5rem;
+}
+
+.notify-card .notify-button {
+  margin-top: 0.75rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--ink, #1d2740);
+  background: var(--ink, #1d2740);
+  color: #f6efe5;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, transform 120ms ease;
+}
+
+.notify-card .notify-button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.notify-card .notify-button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.notify-card .notify-success {
+  margin-top: 0.5rem;
+  color: #2a6a3e;
+  font-weight: 500;
+}
+
+.notify-card .notify-stop {
+  display: inline-block;
+  margin-top: 0.25rem;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.notify-card .notify-error {
+  margin-top: 0.5rem;
+  color: #a83232;
+  font-size: 0.9rem;
+}
