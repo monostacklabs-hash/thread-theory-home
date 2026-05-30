@@ -15,6 +15,7 @@ import { INSTAGRAM_URL } from "@/lib/constants";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { BOOKING_TIMELINE, BookingRecord, BookingStatus } from "@/lib/types";
 import { TrackingNumberCopy } from "./tracking-number-copy";
+import { NotifyCard } from "./notify-card";
 
 export const metadata: Metadata = {
   title: "Order Tracking",
@@ -225,6 +226,12 @@ export default async function OrderTrackingPage({
               </div>
             )}
           </section>
+
+          <NotifyCard
+            bookingId={booking.bookingId}
+            token={booking.token}
+            status={booking.status}
+          />
 
           <p className="tracking-help-line reveal reveal-delay-3">
             Need help? Continue the conversation on{" "}
