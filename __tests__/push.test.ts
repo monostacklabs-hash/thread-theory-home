@@ -56,6 +56,7 @@ describe("sendStatusPush", () => {
   let docs: Array<{ id: string; data: () => { token: string }; ref: { delete: jest.Mock } }>;
   let collectionGet: jest.Mock;
   let firestoreDocDelete: jest.Mock;
+  const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
   beforeEach(() => {
     sendEachForMulticast = jest.fn();
@@ -76,6 +77,14 @@ describe("sendStatusPush", () => {
     mockGetAdminMessaging.mockReturnValue({
       sendEachForMulticast
     } as unknown as ReturnType<typeof getAdminMessaging>);
+  });
+
+  afterEach(() => {
+    if (originalSiteUrl === undefined) {
+      delete process.env.NEXT_PUBLIC_SITE_URL;
+    } else {
+      process.env.NEXT_PUBLIC_SITE_URL = originalSiteUrl;
+    }
   });
 
   it("does nothing when no tokens are subscribed", async () => {

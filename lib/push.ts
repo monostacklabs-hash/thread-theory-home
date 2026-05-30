@@ -36,7 +36,7 @@ export async function sendStatusPush(args: {
   if (snapshot.docs.length === 0) return;
 
   const tokens = snapshot.docs.map((d) => d.data().token as string);
-  const link = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/order/${args.bookingId}?token=${args.token}`;
+  const link = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/order/${args.bookingId}?token=${args.token}`;
 
   try {
     const response = await getAdminMessaging().sendEachForMulticast({
