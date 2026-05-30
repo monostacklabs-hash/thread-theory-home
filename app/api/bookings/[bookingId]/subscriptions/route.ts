@@ -51,13 +51,20 @@ export async function POST(
       {
         token: body.fcmToken,
         userAgent: (body.userAgent || "").slice(0, 200),
-        createdAt: FieldValue.serverTimestamp(),
+        ...(isUpdate ? {} : { createdAt: FieldValue.serverTimestamp() }),
         lastSeenAt: FieldValue.serverTimestamp()
       },
       { merge: true }
     );
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (caughtError) {
+    console.error(
+      JSON.stringify({
+        event: "subscriptions.write_error",
+        bookingId,
+        error: caughtError instanceof Error ? caughtError.message : "unknown"
+      })
+    );
     return NextResponse.json({ error: "Write failed" }, { status: 500 });
   }
 }
@@ -81,7 +88,14 @@ export async function DELETE(
   try {
     await ref.collection("fcmTokens").doc(tokenHash(body.fcmToken)).delete();
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (caughtError) {
+    console.error(
+      JSON.stringify({
+        event: "subscriptions.delete_error",
+        bookingId,
+        error: caughtError instanceof Error ? caughtError.message : "unknown"
+      })
+    );
     return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }
 }
