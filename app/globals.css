@@ -880,6 +880,21 @@ p {
   gap: 14px;
 }
 
+.admin-identity {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 100%;
+}
+
+.admin-email {
+  font-size: 0.86rem;
+  letter-spacing: 0.01em;
+  color: var(--ink-soft);
+  word-break: break-word;
+}
+
 .admin-shell .admin-header h1 {
   margin: 0;
   font-size: clamp(1.6rem, 3.4vw, 2.1rem);
@@ -1485,6 +1500,13 @@ body:has(.selection-bar) {
   letter-spacing: 0.06em;
 }
 
+.track-copied-note {
+  margin-left: 10px;
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+  letter-spacing: 0.02em;
+}
+
 .tracking-meta {
   margin-top: 14px;
   color: var(--ink-soft);
@@ -1788,6 +1810,19 @@ body:has(.selection-bar) {
   align-items: baseline;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+a.tracking-number-link {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+
+a.tracking-number-link:hover {
+  color: var(--ink);
 }
 
 .bookings-table .tracking-line {

@@ -3,13 +3,13 @@
 import { ReactNode } from "react";
 import { BookingRecord } from "@/lib/types";
 import { formatBookingDate, isPrintableStatus, STATUS_LABELS } from "@/lib/bookings";
+import { TrackingNumberLink } from "./tracking-number-link";
 
 type BookingViewProps = {
   booking: BookingRecord;
   onEdit: () => void;
   onCopyCustomerLink: () => void;
   onPrintLabel: () => void;
-  onCopyTrackingNumber?: () => void;
 };
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
@@ -29,8 +29,7 @@ export function BookingView({
   booking,
   onEdit,
   onCopyCustomerLink,
-  onPrintLabel,
-  onCopyTrackingNumber
+  onPrintLabel
 }: BookingViewProps) {
   return (
     <div className="booking-view">
@@ -84,19 +83,7 @@ export function BookingView({
 
       <Row label="Tracking">
         {booking.indiaPostTrackingNumber ? (
-          <span className="tracking-value">
-            <span className="tracking-number">{booking.indiaPostTrackingNumber}</span>
-            {onCopyTrackingNumber ? (
-              <button
-                type="button"
-                className="copy-link"
-                onClick={onCopyTrackingNumber}
-                aria-label="Copy tracking number"
-              >
-                Copy
-              </button>
-            ) : null}
-          </span>
+          <TrackingNumberLink trackingNumber={booking.indiaPostTrackingNumber} />
         ) : (
           <Empty />
         )}

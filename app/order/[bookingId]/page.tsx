@@ -11,10 +11,11 @@ import {
   maskPhone,
   STATUS_LABELS
 } from "@/lib/bookings";
-import { INSTAGRAM_URL } from "@/lib/constants";
+import { INDIA_POST_TRACK_URL, INSTAGRAM_URL } from "@/lib/constants";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { BOOKING_TIMELINE, BookingRecord, BookingStatus } from "@/lib/types";
 import { TrackingNumberCopy } from "./tracking-number-copy";
+import { TrackLink } from "./track-link";
 import { NotifyCard } from "./notify-card";
 
 export const metadata: Metadata = {
@@ -60,7 +61,6 @@ const STEP_COPY: Record<(typeof BOOKING_TIMELINE)[number], string> = {
   delivered: "The order has been delivered or successfully handed over."
 };
 
-const INDIA_POST_TRACK_URL = "https://www.indiapost.gov.in/";
 
 async function getBooking(bookingId: string): Promise<BookingRecord | null> {
   const snapshot = await getAdminDb().collection("bookings").doc(bookingId).get();
@@ -183,14 +183,10 @@ export default async function OrderTrackingPage({
                 <TrackingNumberCopy value={booking.indiaPostTrackingNumber} />
               </p>
               <p>
-                <a
-                  className="text-link"
+                <TrackLink
+                  trackingNumber={booking.indiaPostTrackingNumber}
                   href={INDIA_POST_TRACK_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Look up at India Post
-                </a>
+                />
               </p>
             </section>
           ) : null}
