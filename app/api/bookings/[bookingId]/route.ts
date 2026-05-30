@@ -2,6 +2,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/auth";
 import { getAdminDb } from "@/lib/firebase/admin";
+import { sendStatusPush } from "@/lib/push";
 import {
   isBookingStatus,
   normalizeIndiaPostTrackingNumber,
@@ -87,6 +88,14 @@ export async function PATCH(
 
     if (!data) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    }
+
+    if (body.status !== undefined && data.status && data.token) {
+      void sendStatusPush({
+        bookingId,
+        token: data.token,
+        status: data.status
+      });
     }
 
     const booking: BookingRecord = {
