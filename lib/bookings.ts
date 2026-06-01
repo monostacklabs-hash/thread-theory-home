@@ -1,5 +1,8 @@
 import crypto from "crypto";
 import { BOOKING_STATUSES, BookingStatus, CreateBookingInput } from "@/lib/types";
+import { normalizeIndiaPostTrackingNumber } from "@/lib/india-post";
+
+export { normalizeIndiaPostTrackingNumber };
 
 export const BOOKING_PREFIX = "TTH";
 
@@ -33,7 +36,6 @@ export function isBookingStatus(value: string): value is BookingStatus {
 const INSTAGRAM_HANDLE_PATTERN = /^[a-z0-9._]{1,30}$/;
 const INSTAGRAM_POST_URL_PATTERN =
   /^https?:\/\/(www\.)?instagram\.com\/(p|reel|tv)\/[A-Za-z0-9_-]+\/?(\?.*)?$/;
-const INDIA_POST_TRACKING_PATTERN = /^[A-Z]{2}\d{9}IN$/;
 
 export function normalizeInstagramHandle(input?: string | null): string | null {
   if (!input) return null;
@@ -51,16 +53,6 @@ export function normalizeInstagramPostUrl(input?: string | null): string | null 
   if (!cleaned) return null;
   if (!INSTAGRAM_POST_URL_PATTERN.test(cleaned)) {
     throw new Error("Invalid Instagram post URL");
-  }
-  return cleaned;
-}
-
-export function normalizeIndiaPostTrackingNumber(input?: string | null): string | null {
-  if (!input) return null;
-  const cleaned = input.trim().toUpperCase().replace(/\s+/g, "");
-  if (!cleaned) return null;
-  if (!INDIA_POST_TRACKING_PATTERN.test(cleaned)) {
-    throw new Error("Invalid India Post tracking number (expected format: EE123456789IN)");
   }
   return cleaned;
 }
