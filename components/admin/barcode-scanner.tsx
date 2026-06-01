@@ -45,6 +45,11 @@ export function BarcodeScanner({ onScanned, onClose }: BarcodeScannerProps) {
             }
           }
         );
+
+        if (cancelled) {
+          controls.stop();
+          return;
+        }
       } catch (caught) {
         if (cancelled) return;
         const name = caught instanceof Error ? caught.name : "";
