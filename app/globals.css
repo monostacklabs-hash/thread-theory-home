@@ -2008,3 +2008,77 @@ a.tracking-number-link:hover {
   color: #a83232;
   font-size: 0.9rem;
 }
+
+/* ── Barcode scanner modal ───────────────────────────────── */
+
+.scanner-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(20, 16, 12, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.scanner-panel {
+  width: min(420px, 100%);
+  background: #fffaf2;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 24px 60px rgba(29, 39, 64, 0.28);
+}
+
+.scanner-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.scanner-viewport {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+
+.scanner-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scanner-frame {
+  position: absolute;
+  inset: 18% 10%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 10px;
+}
+
+.scanner-hint {
+  margin: 10px 2px 2px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.input-with-action {
+  display: flex;
+  gap: 8px;
+}
+
+.input-with-action input {
+  flex: 1;
+  min-width: 0;
+}
+
+.input-with-action .btn {
+  flex: 0 0 auto;
+  padding-inline: 16px;
+}
