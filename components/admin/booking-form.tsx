@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { BookingRecord } from "@/lib/types";
+import { BarcodeScanner } from "@/components/admin/barcode-scanner";
 
 type BookingFormProps = {
   onCreated?: (booking: BookingRecord, trackingUrl: string) => void;
@@ -41,6 +42,7 @@ export function BookingForm({ onCreated, onUpdated, booking }: BookingFormProps)
   const [form, setForm] = useState(() => toFormState(booking));
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [scanning, setScanning] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -191,15 +193,24 @@ export function BookingForm({ onCreated, onUpdated, booking }: BookingFormProps)
 
       <div className="field">
         <label htmlFor="indiaPostTrackingNumber">India Post tracking number (optional)</label>
-        <input
-          id="indiaPostTrackingNumber"
-          value={form.indiaPostTrackingNumber}
-          onChange={(event) => updateField("indiaPostTrackingNumber", event.target.value)}
-          placeholder="EE123456789IN"
-          autoCapitalize="characters"
-          autoCorrect="off"
-          spellCheck={false}
-        />
+        <div className="input-with-action">
+          <input
+            id="indiaPostTrackingNumber"
+            value={form.indiaPostTrackingNumber}
+            onChange={(event) => updateField("indiaPostTrackingNumber", event.target.value)}
+            placeholder="EE123456789IN"
+            autoCapitalize="characters"
+            autoCorrect="off"
+            spellCheck={false}
+          />
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setScanning(true)}
+          >
+            Scan
+          </button>
+        </div>
       </div>
 
       <div className="field">
@@ -225,6 +236,16 @@ export function BookingForm({ onCreated, onUpdated, booking }: BookingFormProps)
         <p className="form-error" role="alert">
           {error}
         </p>
+      ) : null}
+
+      {scanning ? (
+        <BarcodeScanner
+          onScanned={(value) => {
+            updateField("indiaPostTrackingNumber", value);
+            setScanning(false);
+          }}
+          onClose={() => setScanning(false)}
+        />
       ) : null}
 
       <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
