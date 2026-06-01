@@ -207,6 +207,7 @@ export function BookingForm({ onCreated, onUpdated, booking }: BookingFormProps)
             type="button"
             className="btn btn-secondary"
             onClick={() => setScanning(true)}
+            disabled={isSubmitting}
           >
             Scan
           </button>
