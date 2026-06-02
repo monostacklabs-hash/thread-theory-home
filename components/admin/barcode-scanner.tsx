@@ -26,14 +26,28 @@ export function BarcodeScanner({ onScanned, onClose }: BarcodeScannerProps) {
         const { BrowserMultiFormatReader } = await import("@zxing/browser");
         const { DecodeHintType, BarcodeFormat } = await import("@zxing/library");
 
+        // India Post Speed Post labels use 1D barcodes (Code 128 / Code 39).
+        // TRY_HARDER improves decoding of small, low-contrast thermal prints.
         const hints = new Map();
-        hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128]);
-        const reader = new BrowserMultiFormatReader(hints);
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+          BarcodeFormat.CODE_128,
+          BarcodeFormat.CODE_39,
+        ]);
+        hints.set(DecodeHintType.TRY_HARDER, true);
+        const reader = new BrowserMultiFormatReader(hints, {
+          delayBetweenScanAttempts: 150,
+        });
 
         if (cancelled || !videoRef.current) return;
 
         controls = await reader.decodeFromConstraints(
-          { video: { facingMode: "environment" } },
+          {
+            video: {
+              facingMode: "environment",
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+            },
+          },
           videoRef.current,
           (result) => {
             if (!result) return;
