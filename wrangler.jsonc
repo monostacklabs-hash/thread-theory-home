@@ -12,18 +12,16 @@
   //   FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY,
   //   ADMIN_EMAILS, SESSION_SECRET
   //
-  // ADMIN_HOST: set to "admin.threadtheoryhome.in" once the custom domains
-  // below are live. Empty means admin is served under /admin on any host.
-  "vars": { "SITE_URL": "https://threadtheoryhome.in", "ADMIN_HOST": "" },
+  // ADMIN_HOST: admin pages and the admin API are only served on this host.
+  // Empty means admin is served under /admin on any host.
+  "vars": { "SITE_URL": "https://threadtheoryhome.in", "ADMIN_HOST": "admin.threadtheoryhome.in" },
   // Caches the Google service-account access token between isolates.
   "kv_namespaces": [{ "binding": "TOKEN_CACHE", "id": "c6ee50762a14426f8e77aed0d464f316" }],
-  // Custom domains: uncomment once threadtheoryhome.in is an active zone on this
-  // Cloudflare account (nameservers moved from GoDaddy), then redeploy.
-  // "routes": [
-  //   { "pattern": "threadtheoryhome.in", "custom_domain": true },
-  //   { "pattern": "www.threadtheoryhome.in", "custom_domain": true },
-  //   { "pattern": "admin.threadtheoryhome.in", "custom_domain": true }
-  // ],
+  "routes": [
+    { "pattern": "threadtheoryhome.in", "custom_domain": true },
+    { "pattern": "www.threadtheoryhome.in", "custom_domain": true },
+    { "pattern": "admin.threadtheoryhome.in", "custom_domain": true }
+  ],
   "assets": {
     "directory": "out",
     "binding": "ASSETS",

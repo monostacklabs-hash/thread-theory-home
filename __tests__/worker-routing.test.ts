@@ -100,6 +100,17 @@ describe("public host with an admin host configured", () => {
     expect(await response.json()).toEqual({ error: "Not found" });
   });
 
+  it.each(["/api/bookings", "/api/bookings/TTH-0001", "/api/bookings/TTH-0001/token"])(
+    "hides the admin-only endpoint %s",
+    async (path) => {
+      const { env } = makeEnv(ADMIN_HOST);
+      const response = await fetchFrom(env, PUBLIC_HOST, path);
+
+      expect(response.status).toBe(404);
+      expect(await response.json()).toEqual({ error: "Not found" });
+    }
+  );
+
   it("does not treat /administrator as an admin path", async () => {
     const { env, assets } = makeEnv(ADMIN_HOST);
     await fetchFrom(env, PUBLIC_HOST, "/administrator");

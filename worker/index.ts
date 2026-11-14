@@ -16,6 +16,11 @@ function isAdminPath(pathname: string) {
   return pathname === "/admin" || pathname.startsWith("/admin/");
 }
 
+/** API paths customers use; every other /api path is admin-only. */
+function isPublicApiPath(pathname: string) {
+  return pathname.startsWith("/api/orders/") || /^\/api\/bookings\/[^/]+\/subscriptions\/?$/.test(pathname);
+}
+
 function redirect(location: string) {
   return new Response(null, { status: 302, headers: { location } });
 }
@@ -68,7 +73,10 @@ async function route(request: Request, env: Env, ctx: ExecutionContext, url: URL
       if (pathname === "/") return redirect("/admin");
     } else {
       if (isAdminPath(pathname)) return redirect(`https://${adminHost}${pathname}${search}`);
-      if (pathname.startsWith("/api/admin/")) return json({ error: "Not found" }, 404);
+      // The admin API only answers on the admin host.
+      if (pathname.startsWith("/api/") && !isPublicApiPath(pathname)) {
+        return json({ error: "Not found" }, 404);
+      }
     }
   }
 
