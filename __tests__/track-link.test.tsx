@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { TrackLink } from "@/app/order/[bookingId]/track-link";
+import { TrackLink } from "@/app/order/track-link";
 
 // jsdom can't follow links; cancel the default so clicking doesn't emit a
 // "navigation not implemented" error. The onClick copy logic still runs.

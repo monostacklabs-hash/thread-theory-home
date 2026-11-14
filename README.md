@@ -7,12 +7,13 @@ Minimal, production-ready web system for an Instagram-led bedsheet business.
 The system is intentionally small:
 
 - Landing page is a public, fast Next.js App Router page focused on trust and Instagram DM conversion.
-- Admin login uses Firebase Auth email/password in the browser only to obtain an ID token.
-- A server route exchanges that ID token for a secure HTTP-only session cookie after validating the admin email allowlist.
-- Admin booking creation and status updates run through Next.js route handlers. Server-side Firebase access (`lib/firebase/`) goes through Google's REST APIs rather than the `firebase-admin` SDK, because that SDK does not run on Cloudflare Workers. `firebase-admin` is kept only for the Node maintenance scripts in `scripts/`.
-- The admin area can be served from its own host. When `NEXT_PUBLIC_ADMIN_HOST` is set (for example `admin.threadtheoryhome.in`), `middleware.ts` serves the dashboard at `/`, `/login` and `/shipping-label` on that host, redirects `/admin/*` on the public host to it, and sends public pages on the admin host back to the public site. When it is unset, admin stays under `/admin`.
-- Customer tracking is a public server-rendered page at `/order/[bookingId]?token=...` with no customer auth.
-- Firestore stores a small set of booking documents keyed by `bookingId`, which keeps reads and updates simple.
+- Every page is a static file. `next build` runs with `output: "export"` and writes `out/`; pages that need data (order tracking, the admin dashboard, shipping labels) load it in the browser from the API.
+- The API is a small Cloudflare Worker in `worker/` (plain fetch handler, no framework). It serves `/api/*`, redirects the customer link format `/order/TTH-0001?token=…` to the static `/order` page, and handles the admin host. Cloudflare serves everything else straight from `out/` without running the Worker.
+- This split exists because the Workers Free plan allows 10 ms of CPU per request. Server-rendering the app in a Worker measured 25-100 ms per cold request; the API Worker measures 1-5 ms.
+- Server-side Firebase access (`lib/firebase/`) uses Google's REST APIs, because the `firebase-admin` SDK does not run on Workers. The Google access token is cached in Workers KV so most requests never sign one. `firebase-admin` is kept only for the Node maintenance scripts in `scripts/`.
+- Admin sign-in: the browser signs in with Firebase Auth, the Worker verifies the ID token and the `ADMIN_EMAILS` allowlist, then sets its own HMAC-signed, HTTP-only session cookie (5 days).
+- The order-tracking API masks personal details on the server; the raw name, phone, email and address never reach the browser.
+- When the Worker variable `ADMIN_HOST` is set (for example `admin.threadtheoryhome.in`), `/admin/*` on the public host redirects to that host, the admin API only answers there, and the admin host is marked noindex. When it is empty, admin is served under `/admin` on any host.
 
 ## Folder structure
 
@@ -106,25 +107,24 @@ npx firebase-tools deploy --only firestore
 
 ## Cloudflare Workers deployment
 
-The app builds for Cloudflare Workers with [vinext](https://github.com/cloudflare/vinext) (`vite.config.ts`, `wrangler.jsonc`). The regular Next.js build (`npm run build`) still works, so the same code also runs on Vercel.
-
 ```bash
-npm run build:cf     # production build, public values from .env.production
-npm run preview:cf   # run the built Worker locally (secrets from .dev.vars)
+npm run build:cf     # static export into out/, public values from .env.production
+npm run preview:cf   # run the Worker and static files locally (secrets from .dev.vars)
 npm run deploy:cf    # build and deploy
 ```
 
-- Public build-time values live in `.env.production` (committed, no secrets). A local `.env.local` overrides it for plain `vite build`, which is why `build:cf` loads `.env.production` explicitly.
-- Server secrets are set once on the Worker: `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`, `ADMIN_EMAILS` (`npx wrangler secret put <NAME>`). For `preview:cf`, copy `.env.local` to `.dev.vars`.
-- Custom domains are listed (commented out) in `wrangler.jsonc`; they need `threadtheoryhome.in` to be an active zone on the Cloudflare account.
-- The Workers Free plan limits each request to 10 ms of CPU, which server-rendering this app exceeds (requests fail with error 1102). Production needs the Workers Paid plan.
+- Public build-time values live in `.env.production` (committed, no secrets).
+- Worker variables are in `wrangler.jsonc`: `SITE_URL`, `ADMIN_HOST`.
+- Worker secrets are set once with `npx wrangler secret put <NAME>`: `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`, `ADMIN_EMAILS`, `SESSION_SECRET` (any long random string; changing it signs every admin out). For local runs, put the same names in `.dev.vars`.
 - `.github/workflows/deploy-cloudflare.yml` deploys on push to `main` and after the daily Instagram sync. It only runs when the repository variable `CLOUDFLARE_DEPLOY` is `true`, and needs the secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
 
 ## Local development
 
 ```bash
 npm install
-npm run dev
+cp .env.local .dev.vars   # Worker secrets for local runs (add SESSION_SECRET)
+npm run dev:api           # API Worker on http://localhost:8787
+npm run dev               # pages on http://localhost:3000, /api proxied to the Worker
 ```
 
 Open `http://localhost:3000`.

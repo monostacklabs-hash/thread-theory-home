@@ -1,13 +1,22 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "thread-theory-home",
+  "main": "worker/index.ts",
   "compatibility_date": "2026-11-14",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "vinext/server/fetch-handler",
   "observability": { "enabled": true },
-  // Server secrets are not listed here. Set them once with `wrangler secret put`:
-  //   FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY, ADMIN_EMAILS
+  // Pages are static files from `next build` (out/). The Worker in worker/
+  // only handles /api/*, host routing and a few redirects.
   //
+  // Server secrets are not listed here. Set them once with `wrangler secret put`:
+  //   FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY,
+  //   ADMIN_EMAILS, SESSION_SECRET
+  //
+  // ADMIN_HOST: set to "admin.threadtheoryhome.in" once the custom domains
+  // below are live. Empty means admin is served under /admin on any host.
+  "vars": { "SITE_URL": "https://threadtheoryhome.in", "ADMIN_HOST": "" },
+  // Caches the Google service-account access token between isolates.
+  "kv_namespaces": [{ "binding": "TOKEN_CACHE", "id": "c6ee50762a14426f8e77aed0d464f316" }],
   // Custom domains: uncomment once threadtheoryhome.in is an active zone on this
   // Cloudflare account (nameservers moved from GoDaddy), then redeploy.
   // "routes": [
@@ -16,14 +25,10 @@
   //   { "pattern": "admin.threadtheoryhome.in", "custom_domain": true }
   // ],
   "assets": {
-    "directory": "dist/client",
-    "html_handling": "none",
-    "not_found_handling": "none",
+    "directory": "out",
     "binding": "ASSETS",
-    "run_worker_first": [
-      "/*",
-      "!/_next/static/*",
-      "!/*/_next/static/*"
-    ]
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/", "/api/*", "/order/*", "/admin", "/admin/*", "/robots.txt"]
   }
 }

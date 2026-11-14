@@ -1,6 +1,8 @@
 /**
- * Service-account access for Google APIs using only fetch + WebCrypto (via
- * jose), so it runs on Cloudflare Workers where firebase-admin cannot.
+ * Service-account access for Google APIs using only fetch + WebCrypto, so it
+ * runs on Cloudflare Workers where firebase-admin cannot. Signing the token
+ * request costs more CPU than a free-plan Worker request allows, so the
+ * access token is cached in module scope and, when available, in KV.
  */
 
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -34,24 +36,104 @@ export function getProjectId(): string {
   return getServiceAccount().projectId;
 }
 
-let cached: { token: string; expiresAt: number } | null = null;
+/** The subset of a Workers KV namespace used to share the access token between isolates. */
+export type TokenCacheStore = {
+  get(key: string): Promise<string | null>;
+  put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
+};
+
+type CachedToken = { token: string; expiresAt: number };
+
+const KV_KEY = "google-access-token";
+const KV_MIN_TTL_SECONDS = 60;
+
+let cached: CachedToken | null = null;
 let pending: Promise<string> | null = null;
+let tokenCache: TokenCacheStore | null = null;
+
+/** Point the module at a KV namespace (or null/undefined for none). Call once per request. */
+export function setTokenCache(store: TokenCacheStore | null | undefined) {
+  tokenCache = store || null;
+}
+
+function isFresh(entry: CachedToken | null): entry is CachedToken {
+  return Boolean(entry && entry.expiresAt - REFRESH_MARGIN_MS > Date.now());
+}
+
+function base64UrlFromBytes(bytes: Uint8Array): string {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function base64UrlFromText(text: string): string {
+  return base64UrlFromBytes(new TextEncoder().encode(text));
+}
+
+function pemToDer(pem: string): ArrayBuffer {
+  const base64 = pem.replace(/-----[A-Z ]+-----/g, "").replace(/\s+/g, "");
+  const binary = atob(base64);
+  const bytes = new Uint8Array(new ArrayBuffer(binary.length));
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
+
+async function signAssertion(account: ServiceAccount): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    "pkcs8",
+    pemToDer(account.privateKey),
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const now = Math.floor(Date.now() / 1000);
+  const header = base64UrlFromText(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const claims = base64UrlFromText(
+    JSON.stringify({
+      scope: SCOPES,
+      iss: account.clientEmail,
+      sub: account.clientEmail,
+      aud: TOKEN_URL,
+      iat: now,
+      exp: now + 3600
+    })
+  );
+  const signingInput = `${header}.${claims}`;
+  const signature = await crypto.subtle.sign(
+    "RSASSA-PKCS1-v1_5",
+    key,
+    new TextEncoder().encode(signingInput)
+  );
+  return `${signingInput}.${base64UrlFromBytes(new Uint8Array(signature))}`;
+}
+
+async function readTokenCache(): Promise<CachedToken | null> {
+  if (!tokenCache) return null;
+  try {
+    const raw = await tokenCache.get(KV_KEY);
+    if (!raw) return null;
+    const entry = JSON.parse(raw) as Partial<CachedToken>;
+    if (typeof entry.token !== "string" || typeof entry.expiresAt !== "number") return null;
+    return { token: entry.token, expiresAt: entry.expiresAt };
+  } catch {
+    return null;
+  }
+}
+
+async function writeTokenCache(entry: CachedToken) {
+  if (!tokenCache) return;
+  try {
+    const ttl = Math.floor((entry.expiresAt - Date.now() - REFRESH_MARGIN_MS) / 1000);
+    await tokenCache.put(KV_KEY, JSON.stringify(entry), {
+      expirationTtl: Math.max(KV_MIN_TTL_SECONDS, ttl)
+    });
+  } catch {
+    // The cache is an optimisation; the token we just minted is still good.
+  }
+}
 
 async function mintAccessToken(): Promise<string> {
-  // Loaded lazily: jose is ESM-only and is only needed when a token is minted.
-  const { importPKCS8, SignJWT } = await import("jose");
-  const account = getServiceAccount();
-  const key = await importPKCS8(account.privateKey, "RS256");
-  const now = Math.floor(Date.now() / 1000);
-
-  const assertion = await new SignJWT({ scope: SCOPES })
-    .setProtectedHeader({ alg: "RS256", typ: "JWT" })
-    .setIssuer(account.clientEmail)
-    .setSubject(account.clientEmail)
-    .setAudience(TOKEN_URL)
-    .setIssuedAt(now)
-    .setExpirationTime(now + 3600)
-    .sign(key);
+  const assertion = await signAssertion(getServiceAccount());
 
   const response = await fetch(TOKEN_URL, {
     method: "POST",
@@ -67,17 +149,30 @@ async function mintAccessToken(): Promise<string> {
   }
 
   const body = (await response.json()) as { access_token: string; expires_in: number };
-  cached = { token: body.access_token, expiresAt: Date.now() + body.expires_in * 1000 };
-  return body.access_token;
+  const entry = { token: body.access_token, expiresAt: Date.now() + body.expires_in * 1000 };
+  cached = entry;
+  await writeTokenCache(entry);
+  return entry.token;
+}
+
+/** Module scope first, then KV, and only then the expensive RSA signing. */
+async function loadAccessToken(): Promise<string> {
+  const shared = await readTokenCache();
+  if (isFresh(shared)) {
+    cached = shared;
+    return shared.token;
+  }
+
+  return mintAccessToken();
 }
 
 export async function getAccessToken(): Promise<string> {
-  if (cached && cached.expiresAt - REFRESH_MARGIN_MS > Date.now()) {
+  if (isFresh(cached)) {
     return cached.token;
   }
 
   if (!pending) {
-    pending = mintAccessToken().finally(() => {
+    pending = loadAccessToken().finally(() => {
       pending = null;
     });
   }

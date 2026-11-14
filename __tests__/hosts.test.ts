@@ -11,8 +11,8 @@ afterEach(() => {
 });
 
 describe("adminPath", () => {
-  it("keeps the /admin prefix when there is no dedicated admin host", () => {
-    delete process.env.NEXT_PUBLIC_ADMIN_HOST;
+  it("always prefixes admin pages with /admin", () => {
+    expect(adminPath()).toBe("/admin");
     expect(adminPath("/")).toBe("/admin");
     expect(adminPath("/login")).toBe("/admin/login");
     expect(adminPath("/shipping-label?bookingId=TTH-0001")).toBe(
@@ -20,10 +20,10 @@ describe("adminPath", () => {
     );
   });
 
-  it("uses clean paths on a dedicated admin host", () => {
+  it("ignores any admin host setting, since the Worker handles host redirects", () => {
     process.env.NEXT_PUBLIC_ADMIN_HOST = "admin.threadtheoryhome.in";
-    expect(adminPath("/")).toBe("/");
-    expect(adminPath("/login")).toBe("/login");
+    expect(adminPath("/")).toBe("/admin");
+    expect(adminPath("/login")).toBe("/admin/login");
   });
 });
 

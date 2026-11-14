@@ -3,7 +3,7 @@ jest.mock("@/lib/firebase/client", () => ({
 }));
 
 import { render } from "@testing-library/react";
-import { NotifyCard } from "@/app/order/[bookingId]/notify-card";
+import { NotifyCard } from "@/app/order/notify-card";
 
 function setUserAgent(ua: string) {
   Object.defineProperty(window.navigator, "userAgent", {

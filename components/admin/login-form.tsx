@@ -2,12 +2,11 @@
 
 import { FormEvent, useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { useRouter } from "next/navigation";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 import { adminPath } from "@/lib/hosts";
+import { assignLocation } from "./navigate";
 
 export function LoginForm() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -38,8 +37,8 @@ export function LoginForm() {
         );
       }
 
-      router.push(adminPath("/"));
-      router.refresh();
+      // The admin pages are static files: a full load picks up the new session.
+      assignLocation(adminPath("/"));
     } catch (caughtError) {
       const message =
         caughtError instanceof Error

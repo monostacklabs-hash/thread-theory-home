@@ -4,15 +4,9 @@
  */
 import { Firestore } from "@/lib/firebase/firestore";
 import { FirebaseMessaging } from "@/lib/firebase/messaging";
-import { FirebaseServerAuth } from "@/lib/firebase/server-auth";
 
-let auth: FirebaseServerAuth | undefined;
 let db: Firestore | undefined;
 let messaging: FirebaseMessaging | undefined;
-
-export function getAdminAuth() {
-  return (auth ||= new FirebaseServerAuth());
-}
 
 export function getAdminDb() {
   return (db ||= new Firestore());

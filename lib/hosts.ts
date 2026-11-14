@@ -1,22 +1,13 @@
 /**
- * The admin area can live on its own host (admin.threadtheoryhome.in) or,
- * when NEXT_PUBLIC_ADMIN_HOST is unset (local dev, previews), under /admin
- * on the same host as the public site.
+ * Admin pages always live under /admin in the static export. On the admin
+ * subdomain the Worker handles the host redirects; the paths stay the same.
  */
-
-export function getAdminHost(): string {
-  return (process.env.NEXT_PUBLIC_ADMIN_HOST || "").trim().toLowerCase();
-}
 
 export function getSiteUrl(): string {
   return (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
 }
 
-/** Path to an admin page: "/login" on the admin host, "/admin/login" otherwise. */
+/** Path to an admin page: adminPath("/") → "/admin", adminPath("/login") → "/admin/login". */
 export function adminPath(path: string = "/"): string {
-  if (getAdminHost()) {
-    return path;
-  }
-
   return path === "/" ? "/admin" : `/admin${path}`;
 }

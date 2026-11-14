@@ -21,3 +21,4 @@ tsconfig.tsbuildinfo
 .wrangler/
 .dev.vars*
 .wrangler/
+out/

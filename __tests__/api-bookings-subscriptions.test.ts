@@ -4,7 +4,8 @@ jest.mock("@/lib/firebase/admin", () => ({
   getAdminDb: jest.fn()
 }));
 
-import { POST, DELETE } from "@/app/api/bookings/[bookingId]/subscriptions/route";
+import worker from "@/worker/index";
+import type { Env } from "@/worker/env";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { tokenHash } from "@/lib/push";
 
@@ -47,34 +48,32 @@ function mockBookingDb(
   return { subs, subCollection };
 }
 
-function req(path: string, method: string, body: unknown) {
-  return new Request(`http://t${path}`, { method, body: JSON.stringify(body) });
+const env: Env = { ASSETS: { fetch: jest.fn() } };
+
+function call(method: "POST" | "DELETE", body: unknown) {
+  const request = new Request("http://t/api/bookings/TTH-1/subscriptions", {
+    method,
+    body: JSON.stringify(body)
+  });
+  return worker.fetch(request, env, { waitUntil: jest.fn() });
 }
 
 describe("POST /api/bookings/[bookingId]/subscriptions", () => {
   it("returns 400 when fields are missing", async () => {
     mockBookingDb({ status: "preparing", token: "tok" }, new Map());
-    const r = await POST(req("/x", "POST", {}), {
-      params: Promise.resolve({ bookingId: "TTH-1" })
-    });
+    const r = await call("POST", {});
     expect(r.status).toBe(400);
   });
 
   it("returns 404 when urlToken does not match", async () => {
     mockBookingDb({ status: "preparing", token: "right" }, new Map());
-    const r = await POST(
-      req("/x", "POST", { urlToken: "wrong", fcmToken: "fcm" }),
-      { params: Promise.resolve({ bookingId: "TTH-1" }) }
-    );
+    const r = await call("POST", { urlToken: "wrong", fcmToken: "fcm" });
     expect(r.status).toBe(404);
   });
 
   it("returns 410 when booking is delivered", async () => {
     mockBookingDb({ status: "delivered", token: "tok" }, new Map());
-    const r = await POST(
-      req("/x", "POST", { urlToken: "tok", fcmToken: "fcm" }),
-      { params: Promise.resolve({ bookingId: "TTH-1" }) }
-    );
+    const r = await call("POST", { urlToken: "tok", fcmToken: "fcm" });
     expect(r.status).toBe(410);
   });
 
@@ -83,10 +82,7 @@ describe("POST /api/bookings/[bookingId]/subscriptions", () => {
     for (let i = 0; i < 10; i++) subs.set(`h${i}`, { token: `t${i}`, lastSeenAt: 0 });
     mockBookingDb({ status: "preparing", token: "tok" }, subs);
 
-    const r = await POST(
-      req("/x", "POST", { urlToken: "tok", fcmToken: "new" }),
-      { params: Promise.resolve({ bookingId: "TTH-1" }) }
-    );
+    const r = await call("POST", { urlToken: "tok", fcmToken: "new" });
     expect(r.status).toBe(429);
   });
 
@@ -94,10 +90,7 @@ describe("POST /api/bookings/[bookingId]/subscriptions", () => {
     const subs: SubDocs = new Map();
     mockBookingDb({ status: "preparing", token: "tok" }, subs);
 
-    const r = await POST(
-      req("/x", "POST", { urlToken: "tok", fcmToken: "fcm-xyz", userAgent: "Mozilla" }),
-      { params: Promise.resolve({ bookingId: "TTH-1" }) }
-    );
+    const r = await call("POST", { urlToken: "tok", fcmToken: "fcm-xyz", userAgent: "Mozilla" });
 
     expect(r.status).toBe(200);
     expect(subs.has(tokenHash("fcm-xyz"))).toBe(true);
@@ -108,10 +101,7 @@ describe("POST /api/bookings/[bookingId]/subscriptions", () => {
 describe("DELETE /api/bookings/[bookingId]/subscriptions", () => {
   it("returns 404 when urlToken does not match", async () => {
     mockBookingDb({ status: "preparing", token: "right" }, new Map());
-    const r = await DELETE(
-      req("/x", "DELETE", { urlToken: "wrong", fcmToken: "fcm" }),
-      { params: Promise.resolve({ bookingId: "TTH-1" }) }
-    );
+    const r = await call("DELETE", { urlToken: "wrong", fcmToken: "fcm" });
     expect(r.status).toBe(404);
   });
 
@@ -120,10 +110,7 @@ describe("DELETE /api/bookings/[bookingId]/subscriptions", () => {
     const subs: SubDocs = new Map([[hash, { token: "fcm-zzz", lastSeenAt: 0 }]]);
     mockBookingDb({ status: "preparing", token: "tok" }, subs);
 
-    const r = await DELETE(
-      req("/x", "DELETE", { urlToken: "tok", fcmToken: "fcm-zzz" }),
-      { params: Promise.resolve({ bookingId: "TTH-1" }) }
-    );
+    const r = await call("DELETE", { urlToken: "tok", fcmToken: "fcm-zzz" });
 
     expect(r.status).toBe(200);
     expect(subs.has(hash)).toBe(false);
@@ -131,10 +118,7 @@ describe("DELETE /api/bookings/[bookingId]/subscriptions", () => {
 
   it("returns 200 when token doc does not exist (idempotent)", async () => {
     mockBookingDb({ status: "preparing", token: "tok" }, new Map());
-    const r = await DELETE(
-      req("/x", "DELETE", { urlToken: "tok", fcmToken: "absent" }),
-      { params: Promise.resolve({ bookingId: "TTH-1" }) }
-    );
+    const r = await call("DELETE", { urlToken: "tok", fcmToken: "absent" });
     expect(r.status).toBe(200);
   });
 });
