@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { adminPath } from "@/lib/hosts";
 
 export function SignOutButton() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -8,7 +9,7 @@ export function SignOutButton() {
   async function handleLogout() {
     setIsLoggingOut(true);
     await fetch("/api/admin/logout", { method: "POST" });
-    window.location.href = "/admin/login";
+    window.location.href = adminPath("/login");
   }
 
   return (

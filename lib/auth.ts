@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getAdminAuth } from "@/lib/firebase/admin";
+import { adminPath } from "@/lib/hosts";
 import { ADMIN_COOKIE_NAME } from "@/lib/session";
 
 function getAllowedEmails() {
@@ -43,7 +44,7 @@ export async function requireAdminSession() {
   const session = await getAdminSession();
 
   if (!session) {
-    redirect("/admin/login");
+    redirect(adminPath("/login"));
   }
 
   return session;

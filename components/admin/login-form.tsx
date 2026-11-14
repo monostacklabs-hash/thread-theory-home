@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { getFirebaseAuth } from "@/lib/firebase/client";
+import { adminPath } from "@/lib/hosts";
 
 export function LoginForm() {
   const router = useRouter();
@@ -37,7 +38,7 @@ export function LoginForm() {
         );
       }
 
-      router.push("/admin");
+      router.push(adminPath("/"));
       router.refresh();
     } catch (caughtError) {
       const message =

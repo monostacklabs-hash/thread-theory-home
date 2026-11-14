@@ -9,6 +9,7 @@ import {
   isPrintableStatus,
   STATUS_LABELS
 } from "@/lib/bookings";
+import { adminPath } from "@/lib/hosts";
 import { Modal } from "@/components/admin/modal";
 import { BookingForm } from "@/components/admin/booking-form";
 import { BookingView } from "@/components/admin/booking-view";
@@ -263,7 +264,7 @@ export function BookingsTable({
     const query = selectedIds
       .map((id) => `bookingId=${encodeURIComponent(id)}`)
       .join("&");
-    window.open(`/admin/shipping-label?${query}`, "_blank", "noopener");
+    window.open(adminPath(`/shipping-label?${query}`), "_blank", "noopener");
   }
 
   async function updateStatus(bookingId: string, status: BookingStatus) {
@@ -294,7 +295,7 @@ export function BookingsTable({
   async function copyTrackingLink(booking: BookingRecord) {
     try {
       const trackingUrl = buildTrackingUrl({
-        siteUrl: window.location.origin,
+        siteUrl: process.env.NEXT_PUBLIC_SITE_URL || window.location.origin,
         bookingId: booking.bookingId,
         token: booking.token
       });
@@ -315,7 +316,7 @@ export function BookingsTable({
 
   function openShippingLabel(booking: BookingRecord) {
     window.open(
-      `/admin/shipping-label?bookingId=${booking.bookingId}`,
+      adminPath(`/shipping-label?bookingId=${booking.bookingId}`),
       "_blank",
       "noopener"
     );
