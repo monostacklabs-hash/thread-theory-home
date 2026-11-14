@@ -1,4 +1,4 @@
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue } from "@/lib/firebase/firestore";
 import { NextResponse } from "next/server";
 import { buildTrackingUrl, generateTrackingToken } from "@/lib/bookings";
 import { getAdminSession } from "@/lib/auth";

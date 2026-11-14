@@ -1,4 +1,4 @@
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue } from "@/lib/firebase/firestore";
 import { NextResponse, after } from "next/server";
 import { getAdminSession } from "@/lib/auth";
 import { getAdminDb } from "@/lib/firebase/admin";
