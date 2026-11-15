@@ -1,13 +1,19 @@
 import { ImageResponse } from "next/og";
 
-export const size = {
+/**
+ * The social share image, written to out/og-image.png by the static export.
+ * It is a route with a .png name (not the opengraph-image file convention)
+ * because that convention exports a file with no extension, which a static
+ * host serves without an image content type.
+ */
+export const dynamic = "force-static";
+
+const size = {
   width: 1200,
   height: 630
 };
 
-export const contentType = "image/png";
-
-export default function OpenGraphImage() {
+export function GET() {
   return new ImageResponse(
     (
       <div

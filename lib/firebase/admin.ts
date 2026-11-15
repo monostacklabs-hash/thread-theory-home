@@ -1,46 +1,17 @@
-import { App, cert, getApp, getApps, initializeApp } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
-import { getFirestore } from "firebase-admin/firestore";
-import { getMessaging } from "firebase-admin/messaging";
+/**
+ * Server-side Firebase access. Implemented over Google's REST APIs (not the
+ * firebase-admin SDK) so the same code runs on Cloudflare Workers.
+ */
+import { Firestore } from "@/lib/firebase/firestore";
+import { FirebaseMessaging } from "@/lib/firebase/messaging";
 
-let app: App | undefined;
-
-function getPrivateKey() {
-  const key = process.env.FIREBASE_PRIVATE_KEY;
-
-  if (!key) {
-    throw new Error("Missing FIREBASE_PRIVATE_KEY");
-  }
-
-  return key.replace(/\\n/g, "\n");
-}
-
-export function getFirebaseAdminApp() {
-  if (!app) {
-    if (getApps().length) {
-      app = getApp();
-    } else {
-      app = initializeApp({
-        credential: cert({
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: getPrivateKey()
-        })
-      });
-    }
-  }
-
-  return app;
-}
-
-export function getAdminAuth() {
-  return getAuth(getFirebaseAdminApp());
-}
+let db: Firestore | undefined;
+let messaging: FirebaseMessaging | undefined;
 
 export function getAdminDb() {
-  return getFirestore(getFirebaseAdminApp());
+  return (db ||= new Firestore());
 }
 
 export function getAdminMessaging() {
-  return getMessaging(getFirebaseAdminApp());
+  return (messaging ||= new FirebaseMessaging());
 }

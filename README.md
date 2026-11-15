@@ -7,11 +7,13 @@ Minimal, production-ready web system for an Instagram-led bedsheet business.
 The system is intentionally small:
 
 - Landing page is a public, fast Next.js App Router page focused on trust and Instagram DM conversion.
-- Admin login uses Firebase Auth email/password in the browser only to obtain an ID token.
-- A server route exchanges that ID token for a secure HTTP-only session cookie after validating the admin email allowlist.
-- Admin booking creation and status updates run through Next.js route handlers using Firebase Admin SDK.
-- Customer tracking is a public server-rendered page at `/order/[bookingId]?token=...` with no customer auth.
-- Firestore stores a small set of booking documents keyed by `bookingId`, which keeps reads and updates simple.
+- Every page is a static file. `next build` runs with `output: "export"` and writes `out/`; pages that need data (order tracking, the admin dashboard, shipping labels) load it in the browser from the API.
+- The API is a small Cloudflare Worker in `worker/` (plain fetch handler, no framework). It serves `/api/*`, redirects the customer link format `/order/TTH-0001?token=…` to the static `/order` page, and handles the admin host. Cloudflare serves everything else straight from `out/` without running the Worker.
+- This split exists because the Workers Free plan allows 10 ms of CPU per request. Server-rendering the app in a Worker measured 25-100 ms per cold request; the API Worker measures 1-5 ms.
+- Server-side Firebase access (`lib/firebase/`) uses Google's REST APIs, because the `firebase-admin` SDK does not run on Workers. The Google access token is cached in Workers KV so most requests never sign one. `firebase-admin` is kept only for the Node maintenance scripts in `scripts/`.
+- Admin sign-in: the browser signs in with Firebase Auth, the Worker verifies the ID token and the `ADMIN_EMAILS` allowlist, then sets its own HMAC-signed, HTTP-only session cookie (5 days).
+- The order-tracking API masks personal details on the server; the raw name, phone, email and address never reach the browser.
+- When the Worker variable `ADMIN_HOST` is set (for example `admin.threadtheoryhome.in`), `/admin/*` on the public host redirects to that host, the admin API only answers there, and the admin host is marked noindex. When it is empty, admin is served under `/admin` on any host.
 
 ## Folder structure
 
@@ -103,11 +105,26 @@ npx firebase-tools deploy --only firestore
 7. Add the secrets referenced in `apphosting.yaml` to App Hosting.
 8. Set `NEXT_PUBLIC_SITE_URL` to the final App Hosting domain or your custom domain.
 
+## Cloudflare Workers deployment
+
+```bash
+npm run build:cf     # static export into out/, public values from .env.production
+npm run preview:cf   # run the Worker and static files locally (secrets from .dev.vars)
+npm run deploy:cf    # build and deploy
+```
+
+- Public build-time values live in `.env.production` (committed, no secrets).
+- Worker variables are in `wrangler.jsonc`: `SITE_URL`, `ADMIN_HOST`.
+- Worker secrets are set once with `npx wrangler secret put <NAME>`: `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`, `ADMIN_EMAILS`, `SESSION_SECRET` (any long random string; changing it signs every admin out). For local runs, put the same names in `.dev.vars`.
+- `.github/workflows/deploy-cloudflare.yml` deploys on push to `main` and after the daily Instagram sync. It only runs when the repository variable `CLOUDFLARE_DEPLOY` is `true`, and needs the secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+
 ## Local development
 
 ```bash
 npm install
-npm run dev
+cp .env.local .dev.vars   # Worker secrets for local runs (add SESSION_SECRET)
+npm run dev:api           # API Worker on http://localhost:8787
+npm run dev               # pages on http://localhost:3000, /api proxied to the Worker
 ```
 
 Open `http://localhost:3000`.

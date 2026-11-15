@@ -17,3 +17,8 @@ pnpm-debug.log*
 tsconfig.tsbuildinfo
 .claude/settings.local.json
 .claude/worktrees/
+.vinext/
+.wrangler/
+.dev.vars*
+.wrangler/
+out/

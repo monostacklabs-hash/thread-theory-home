@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { LoginForm } from "@/components/admin/login-form";
+import { getSiteUrl } from "@/lib/hosts";
 
 export const metadata: Metadata = {
   title: "Admin Login",
@@ -21,9 +21,10 @@ export default function AdminLoginPage() {
           <LoginForm />
         </section>
         <p className="login-foot">
-          <Link className="login-back" href="/">
+          {/* An absolute link: on the admin host "/" is the dashboard, not the shop. */}
+          <a className="login-back" href={getSiteUrl()}>
             Back to Thread Theory Home
-          </Link>
+          </a>
         </p>
       </div>
     </main>

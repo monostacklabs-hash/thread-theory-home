@@ -45,7 +45,8 @@ export const metadata: Metadata = {
     siteName: "Thread Theory Home",
     images: [
       {
-        url: "/opengraph-image",
+        url: "/og-image.png",
+        type: "image/png",
         width: 1200,
         height: 630,
         alt: "Thread Theory Home"
@@ -57,7 +58,7 @@ export const metadata: Metadata = {
     title: "Thread Theory Home | Premium Bedsheets via Instagram",
     description:
       "Instagram-first premium bedding with direct order confirmation and private tracking.",
-    images: ["/opengraph-image"]
+    images: ["/og-image.png"]
   },
   robots: {
     index: true,
