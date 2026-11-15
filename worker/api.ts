@@ -107,6 +107,12 @@ const createSession: Handler = async ({ request, env }) => {
 
     const decoded = await verifyIdToken(body.idToken);
 
+    // Admins sign in with Google only. A password account that merely claims an
+    // allow-listed address must not get in, so insist on a verified Google identity.
+    if (decoded.signInProvider !== "google.com" || !decoded.emailVerified) {
+      return json({ error: "Sign in with a verified Google account" }, 403);
+    }
+
     if (!decoded.email || !isAllowedAdminEmail(decoded.email, env.ADMIN_EMAILS)) {
       return json({ error: "This account is not allowed" }, 403);
     }
