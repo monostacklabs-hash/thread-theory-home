@@ -39,33 +39,42 @@ describe("admin host", () => {
     expect(assets).not.toHaveBeenCalled();
   });
 
-  it("redirects / to /admin", async () => {
-    const { env } = makeEnv(ADMIN_HOST);
-    const response = await fetchFrom(env, ADMIN_HOST, "/");
-
-    expect(response.status).toBe(302);
-    expect(response.headers.get("location")).toBe("/admin");
-    expect(response.headers.get("x-robots-tag")).toBe("noindex, nofollow");
-  });
-
-  it("serves admin pages from assets with a noindex header", async () => {
+  it.each([
+    ["/", "/admin"],
+    ["/login", "/admin/login"],
+    ["/shipping-label?bookingId=TTH-0001", "/admin/shipping-label?bookingId=TTH-0001"]
+  ])("serves %s from the static page %s with a noindex header", async (path, asset) => {
     const { env, assets } = makeEnv(ADMIN_HOST);
-    const response = await fetchFrom(env, ADMIN_HOST, "/admin/login");
+    const response = await fetchFrom(env, ADMIN_HOST, path);
 
     expect(assets).toHaveBeenCalledTimes(1);
+    const served = new URL((assets.mock.calls as unknown as Request[][])[0][0].url);
+    expect(served.pathname + served.search).toBe(asset);
     expect(await response.text()).toBe("asset body");
     expect(response.headers.get("x-robots-tag")).toBe("noindex, nofollow");
   });
 
-  it("matches the host header case-insensitively", async () => {
-    const { env } = makeEnv("Admin.ThreadTheoryHome.in");
-    const request = new Request("https://admin.threadtheoryhome.in/", {
-      headers: { host: "ADMIN.threadtheoryhome.in" }
-    });
-    const response = await worker.fetch(request, env, { waitUntil: jest.fn() });
+  it.each([
+    ["/admin", "/"],
+    ["/admin/login", "/login"],
+    ["/admin/shipping-label?bookingId=TTH-0001", "/shipping-label?bookingId=TTH-0001"]
+  ])("redirects the old path %s to %s", async (path, location) => {
+    const { env, assets } = makeEnv(ADMIN_HOST);
+    const response = await fetchFrom(env, ADMIN_HOST, path);
 
     expect(response.status).toBe(302);
-    expect(response.headers.get("location")).toBe("/admin");
+    expect(response.headers.get("location")).toBe(location);
+    expect(assets).not.toHaveBeenCalled();
+  });
+
+  it("matches the host header case-insensitively", async () => {
+    const { env, assets } = makeEnv("Admin.ThreadTheoryHome.in");
+    const request = new Request("https://admin.threadtheoryhome.in/login", {
+      headers: { host: "ADMIN.threadtheoryhome.in" }
+    });
+    await worker.fetch(request, env, { waitUntil: jest.fn() });
+
+    expect(new URL((assets.mock.calls as unknown as Request[][])[0][0].url).pathname).toBe("/admin/login");
   });
 
   it("serves the admin API (401 without a cookie, with noindex)", async () => {
@@ -80,9 +89,9 @@ describe("admin host", () => {
 
 describe("public host with an admin host configured", () => {
   it.each([
-    ["/admin", "https://admin.threadtheoryhome.in/admin"],
-    ["/admin/login", "https://admin.threadtheoryhome.in/admin/login"],
-    ["/admin/shipping-label?id=TTH-0001&x=1", "https://admin.threadtheoryhome.in/admin/shipping-label?id=TTH-0001&x=1"]
+    ["/admin", "https://admin.threadtheoryhome.in/"],
+    ["/admin/login", "https://admin.threadtheoryhome.in/login"],
+    ["/admin/shipping-label?id=TTH-0001&x=1", "https://admin.threadtheoryhome.in/shipping-label?id=TTH-0001&x=1"]
   ])("redirects %s to the admin host", async (path, location) => {
     const { env, assets } = makeEnv(ADMIN_HOST);
     const response = await fetchFrom(env, PUBLIC_HOST, path);

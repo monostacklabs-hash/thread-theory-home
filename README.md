@@ -13,7 +13,7 @@ The system is intentionally small:
 - Server-side Firebase access (`lib/firebase/`) uses Google's REST APIs, because the `firebase-admin` SDK does not run on Workers. The Google access token is cached in Workers KV so most requests never sign one. `firebase-admin` is kept only for the Node maintenance scripts in `scripts/`.
 - Admin sign-in: the browser signs in with Firebase Auth, the Worker verifies the ID token and the `ADMIN_EMAILS` allowlist, then sets its own HMAC-signed, HTTP-only session cookie (5 days).
 - The order-tracking API masks personal details on the server; the raw name, phone, email and address never reach the browser.
-- When the Worker variable `ADMIN_HOST` is set (for example `admin.threadtheoryhome.in`), `/admin/*` on the public host redirects to that host, the admin API only answers there, and the admin host is marked noindex. When it is empty, admin is served under `/admin` on any host.
+- When the Worker variable `ADMIN_HOST` is set (for example `admin.threadtheoryhome.in`), that host serves the dashboard at `/`, sign-in at `/login` and labels at `/shipping-label`. `/admin/*` on any host redirects to those addresses, the admin API only answers on the admin host, and the admin host is marked noindex. When it is empty, admin is served under `/admin` on any host.
 
 ## Folder structure
 

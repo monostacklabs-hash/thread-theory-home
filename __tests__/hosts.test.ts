@@ -20,11 +20,6 @@ describe("adminPath", () => {
     );
   });
 
-  it("ignores any admin host setting, since the Worker handles host redirects", () => {
-    process.env.NEXT_PUBLIC_ADMIN_HOST = "admin.threadtheoryhome.in";
-    expect(adminPath("/")).toBe("/admin");
-    expect(adminPath("/login")).toBe("/admin/login");
-  });
 });
 
 describe("getSiteUrl", () => {

@@ -16,6 +16,18 @@ function isAdminPath(pathname: string) {
   return pathname === "/admin" || pathname.startsWith("/admin/");
 }
 
+/** Clean admin-host paths and the static page each one serves. */
+const ADMIN_HOST_PAGES: Record<string, string> = {
+  "/": "/admin",
+  "/login": "/admin/login",
+  "/shipping-label": "/admin/shipping-label"
+};
+
+/** "/admin/login" → "/login", "/admin" → "/". */
+function stripAdminPrefix(pathname: string) {
+  return pathname.slice("/admin".length) || "/";
+}
+
 /** API paths customers use; every other /api path is admin-only. */
 function isPublicApiPath(pathname: string) {
   return pathname.startsWith("/api/orders/") || /^\/api\/bookings\/[^/]+\/subscriptions\/?$/.test(pathname);
@@ -70,9 +82,17 @@ async function route(request: Request, env: Env, ctx: ExecutionContext, url: URL
           headers: { "content-type": "text/plain; charset=utf-8" }
         });
       }
-      if (pathname === "/") return redirect("/admin");
+      // Old /admin/... links keep working, at the clean address.
+      if (isAdminPath(pathname)) return redirect(`${stripAdminPrefix(pathname)}${search}`);
+
+      const page = ADMIN_HOST_PAGES[pathname.length > 1 ? pathname.replace(/\/$/, "") : pathname];
+      if (page && (request.method === "GET" || request.method === "HEAD")) {
+        return env.ASSETS.fetch(new Request(new URL(`${page}${search}`, url), request));
+      }
     } else {
-      if (isAdminPath(pathname)) return redirect(`https://${adminHost}${pathname}${search}`);
+      if (isAdminPath(pathname)) {
+        return redirect(`https://${adminHost}${stripAdminPrefix(pathname)}${search}`);
+      }
       // The admin API only answers on the admin host.
       if (pathname.startsWith("/api/") && !isPublicApiPath(pathname)) {
         return json({ error: "Not found" }, 404);

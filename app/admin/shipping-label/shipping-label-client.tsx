@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import "./shipping-label.css";
+import { adminPath } from "@/lib/hosts";
 
 type InitialRecipient = {
   name: string;
@@ -114,7 +115,7 @@ export default function ShippingLabelClient({ initialRecipients }: Props) {
             Pre-filled from the booking — adjust as needed, then print on A4. The sender block
             stays saved on this device. Two labels fit on one sheet.
           </p>
-          <a className="login-back" href="/admin">
+          <a className="login-back" href={adminPath("/")}>
             Back to bookings
           </a>
         </section>
