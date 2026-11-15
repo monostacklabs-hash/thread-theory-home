@@ -24,10 +24,6 @@ export type SessionPayload = AdminSession & { iat: number; exp: number };
 export type IdTokenClaims = {
   uid: string;
   email?: string;
-  /** Whether the identity provider has verified the email address. */
-  emailVerified: boolean;
-  /** How the user signed in, e.g. "google.com" or "password". */
-  signInProvider?: string;
   /** Seconds since epoch when the user last signed in. */
   authTime: number;
 };
@@ -147,8 +143,6 @@ export async function verifyIdToken(idToken: string): Promise<IdTokenClaims> {
     iat?: number;
     auth_time?: number;
     email?: string;
-    email_verified?: boolean;
-    firebase?: { sign_in_provider?: string };
   }>(parts[1]);
   const projectId = getProjectId();
   const now = Math.floor(Date.now() / 1000);
@@ -166,8 +160,6 @@ export async function verifyIdToken(idToken: string): Promise<IdTokenClaims> {
   return {
     uid: claims.sub,
     email: typeof claims.email === "string" ? claims.email : undefined,
-    emailVerified: claims.email_verified === true,
-    signInProvider: claims.firebase?.sign_in_provider,
     authTime: typeof claims.auth_time === "number" ? claims.auth_time : claims.iat
   };
 }

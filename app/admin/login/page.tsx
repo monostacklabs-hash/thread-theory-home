@@ -17,7 +17,7 @@ export default function AdminLoginPage() {
         <section className="login-panel reveal" aria-labelledby="admin-login-heading">
           <span className="panel-label">Admin</span>
           <h1 id="admin-login-heading">Sign in to manage bookings.</h1>
-          <p>Sign in with your Google account. We&rsquo;ll keep you signed in on this device.</p>
+          <p>Sign in with your team account. We&rsquo;ll keep you signed in on this device.</p>
           <LoginForm />
         </section>
         <p className="login-foot">

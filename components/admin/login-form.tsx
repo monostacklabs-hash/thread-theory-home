@@ -1,86 +1,90 @@
 "use client";
 
-import { useState } from "react";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { FormEvent, useState } from "react";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 import { adminPath } from "@/lib/hosts";
 import { assignLocation } from "./navigate";
 
-// Errors that mean the person closed or cancelled the popup: not worth an error message.
-const CANCELLED = new Set(["auth/popup-closed-by-user", "auth/cancelled-popup-request"]);
-
 export function LoginForm() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleGoogleSignIn() {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setError(null);
     setIsSubmitting(true);
-    const auth = getFirebaseAuth();
 
     try {
-      const provider = new GoogleAuthProvider();
-      // Always show the account chooser, so a second Google account can be picked.
-      provider.setCustomParameters({ prompt: "select_account" });
-
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithEmailAndPassword(getFirebaseAuth(), email, password);
       const idToken = await result.user.getIdToken();
 
       const response = await fetch("/api/admin/session", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({ idToken })
       });
 
       if (!response.ok) {
-        // Do not stay signed in to Firebase as an account the site turned away.
-        await auth.signOut().catch(() => undefined);
         const body = (await response.json().catch(() => null)) as { error?: string } | null;
         throw new Error(
-          response.status === 403
-            ? "That Google account is not allowed to manage bookings. Try a different account."
-            : body?.error || "That sign-in didn’t go through. Please try again."
+          body?.error ||
+            "That sign-in didn’t go through. Check your email and password, then try again."
         );
       }
 
       // The admin pages are static files: a full load picks up the new session.
       assignLocation(adminPath("/"));
     } catch (caughtError) {
-      const code = (caughtError as { code?: string }).code;
-      if (code && CANCELLED.has(code)) {
-        // Nothing to show.
-      } else if (code === "auth/popup-blocked") {
-        setError("Your browser blocked the sign-in window. Allow pop-ups for this site and try again.");
-      } else if (code === "auth/unauthorized-domain") {
-        setError("This address is not set up for Google sign-in yet.");
-      } else {
-        setError(
-          caughtError instanceof Error && !code
-            ? caughtError.message
-            : "Sign-in unavailable. Check your connection and try again in a moment."
-        );
-      }
+      const message =
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Sign-in unavailable. Check your connection and try again in a moment.";
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
-    <div className="form-grid">
+    <form className="form-grid" onSubmit={handleSubmit}>
+      <div className="field">
+        <label htmlFor="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          required
+        />
+      </div>
+
+      <div className="field">
+        <label htmlFor="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          required
+        />
+      </div>
+
       {error ? (
         <p className="form-error" role="alert">
           {error}
         </p>
       ) : null}
 
-      <button
-        className="btn btn-primary"
-        type="button"
-        onClick={handleGoogleSignIn}
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? "Waiting for Google…" : "Continue with Google"}
+      <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
+        {isSubmitting ? "Signing in…" : "Sign in"}
       </button>
-    </div>
+    </form>
   );
 }

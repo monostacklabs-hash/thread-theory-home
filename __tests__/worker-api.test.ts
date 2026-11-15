@@ -350,8 +350,6 @@ describe("POST /api/admin/session sign-in", () => {
         aud: "demo-project",
         sub: "admin-uid",
         email: "Owner@Example.com",
-        email_verified: true,
-        firebase: { sign_in_provider: "google.com" },
         iat: now - 5,
         exp: now + 3600,
         auth_time: now - 5,
@@ -419,21 +417,6 @@ describe("POST /api/admin/session sign-in", () => {
 
     expect(response.status).toBe(403);
     expect(await response.json()).toEqual({ error: "This account is not allowed" });
-    expect(response.headers.get("set-cookie")).toBeNull();
-  });
-
-  it.each([
-    ["a password sign-in", { firebase: { sign_in_provider: "password" } }],
-    ["an unverified email", { email_verified: false }],
-    ["a token with no provider", { firebase: {} }]
-  ])("returns 403 for %s, even for an allow-listed address", async (_label, claims) => {
-    const response = await call("/api/admin/session", {
-      method: "POST",
-      body: { idToken: await idToken(claims) }
-    });
-
-    expect(response.status).toBe(403);
-    expect(await response.json()).toEqual({ error: "Sign in with a verified Google account" });
     expect(response.headers.get("set-cookie")).toBeNull();
   });
 

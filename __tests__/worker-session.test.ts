@@ -179,8 +179,6 @@ describe("verifyIdToken", () => {
         aud: "demo-project",
         sub: "user-1",
         email: "owner@example.com",
-        email_verified: true,
-        firebase: { sign_in_provider: "google.com" },
         iat: nowSeconds() - 10,
         exp: nowSeconds() + 3600,
         auth_time: nowSeconds() - 20,
@@ -214,20 +212,10 @@ describe("verifyIdToken", () => {
     fetchMock.mockRestore();
   });
 
-  it("reports a password sign-in and an unverified email as such", async () => {
-    const claims = await verifyIdToken(
-      await makeToken({ email_verified: undefined, firebase: { sign_in_provider: "password" } })
-    );
-    expect(claims.emailVerified).toBe(false);
-    expect(claims.signInProvider).toBe("password");
-  });
-
   it("accepts a valid token and caches Google's keys", async () => {
     const claims = await verifyIdToken(await makeToken());
     expect(claims.uid).toBe("user-1");
     expect(claims.email).toBe("owner@example.com");
-    expect(claims.emailVerified).toBe(true);
-    expect(claims.signInProvider).toBe("google.com");
 
     await verifyIdToken(await makeToken());
     expect(fetchMock).toHaveBeenCalledTimes(1);
