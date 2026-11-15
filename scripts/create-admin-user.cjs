@@ -35,7 +35,10 @@ async function main() {
   });
 
   const email = "admin@threadtheoryhome.in";
-  const password = "TthAdmin2026Pass";
+  const password = process.env.ADMIN_PASSWORD;
+  if (!password || password.length < 12) {
+    throw new Error("Set ADMIN_PASSWORD (12+ characters) in the environment; it is never stored in this file.");
+  }
 
   try {
     const user = await getAuth().getUserByEmail(email);
@@ -43,14 +46,14 @@ async function main() {
       password,
       emailVerified: true
     });
-    console.log(`RESET ${email} ${password}`);
+    console.log(`RESET ${email}`);
   } catch {
     const user = await getAuth().createUser({
       email,
       password,
       emailVerified: true
     });
-    console.log(`CREATED ${user.uid} ${email} ${password}`);
+    console.log(`CREATED ${user.uid} ${email}`);
   }
 }
 
